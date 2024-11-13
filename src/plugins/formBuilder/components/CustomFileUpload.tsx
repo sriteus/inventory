@@ -86,7 +86,7 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
 
   return (
     <Box sx={style}>
-      <Button variant="outlined" component="label" size={size} fullWidth={fullWidth}>
+      <Button variant="contained" component="label" size={size} fullWidth={fullWidth}>
         {label}
         <input
           type="file"
