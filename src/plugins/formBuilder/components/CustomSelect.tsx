@@ -21,7 +21,7 @@ interface CustomSelectProps {
     };
     addAttributes?: Record<string, any>; // Add additional attributes
   };
-  value: any; // `value` can be any type, but should be an array when `multiple` is used
+  value: any; // value can be any type, but should be an array when multiple is used
   onChange: (value: any[]) => void;
   onBlur?: (event: React.FocusEvent) => void;
   onFocus?: (event: React.FocusEvent) => void;
@@ -62,10 +62,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
 
   return (
     <FormControl fullWidth={fullWidth} sx={style} size={size} required={required} error={!!error}>
-      <InputLabel shrink>{label}</InputLabel>
+      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
+        {label}
+        {required && <span style={{ color: 'red' }}>*</span>}
+      </label>
       <Select
-        label={label}
-        value={Array.isArray(value) ? value : []} // Ensure the value is always an array
+        id={name}
+        value={Array.isArray(value) && value.length > 0 ? value : ''} // Set default empty value
         onChange={handleChange}
         name={name}
         onBlur={onBlur}
@@ -92,7 +95,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
           <MenuItem disabled>No options available</MenuItem>
         )}
       </Select>
-      {error && <FormHelperText>{error}</FormHelperText>}
+      {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>}
     </FormControl>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField } from '@mui/material';
+import { TextField, FormControl, FormHelperText } from '@mui/material';
 
 interface CustomNumberFieldProps {
   field: {
@@ -71,33 +71,33 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
   };
 
   return (
-    <TextField
-      label={label}
-      name={name}
-      value={value}
-      onChange={handleChange}
-      placeholder={placeholder}
-      required={required}
-      fullWidth={fullWidth}
-      size={size}
-      sx={{
-        ...style,
-        '& .MuiInputBase-input': {
-          fontSize: '12px', // Smaller font size
-          padding: '4px 8px', // Smaller padding
-        },
-        '& .MuiFormHelperText-root': {
-          fontSize: '10px', // Smaller helper text
-        },
-      }}
-      error={!!error}
-      helperText={error}
-      type="number"
-      onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}
-      onBlur={handleBlur}
-      onFocus={handleFocus}
-    />
+    <FormControl fullWidth={fullWidth} sx={style} required={required} error={!!error}>
+      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
+        {label}
+        {required && <span style={{ color: 'red' }}>*</span>}
+      </label>
+      <TextField
+        id={name}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        required={required}
+        fullWidth={fullWidth}
+        size={size}
+        sx={{
+          '& .MuiInputBase-input': { fontSize: '12px', padding: '4px 8px' },
+          '& .MuiFormHelperText-root': { fontSize: '10px', margin: '0px' },
+        }}
+        error={!!error}
+        helperText={error}
+        type="number"
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+      />
+      {error && <FormHelperText sx={{ margin: '0px', fontSize: '12px' }}>{error}</FormHelperText>}
+    </FormControl>
   );
 };
 

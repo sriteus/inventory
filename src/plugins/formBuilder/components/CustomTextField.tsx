@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-
-import { TextField } from '@mui/material';
+import { TextField, FormControl, FormHelperText } from '@mui/material';
+// import HelperTooltip from './HelperToolTip'; // Import the new component
 
 interface CustomTextFieldProps {
   field: {
@@ -16,6 +16,7 @@ interface CustomTextFieldProps {
     };
     size?: 'small' | 'medium';
     addAttributes?: Record<string, any>;
+    helperText?: string; // Add helperText field
   };
   value: string;
   onChange: (value: string) => void;
@@ -34,8 +35,18 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   onBlur,
   onFocus,
 }) => {
-  const { label, name, placeholder, required, fullWidth, style, validation, size, addAttributes } =
-    field;
+  const {
+    label,
+    name,
+    placeholder,
+    required,
+    fullWidth,
+    style,
+    validation,
+    size,
+    addAttributes,
+    helperText, // Get helperText
+  } = field;
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,34 +85,40 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   };
 
   return (
-    <TextField
-      label={label}
-      name={name}
-      placeholder={placeholder}
-      required={required}
-      fullWidth={fullWidth}
-      InputLabelProps={{ shrink: true }}
-      sx={{
-        ...style,
-        '& .MuiInputBase-input': {
-          fontSize: '12px', // Smaller font size
-          padding: '4px 8px', // Smaller padding
-        },
-        '& .MuiFormHelperText-root': {
-          fontSize: '10px', // Smaller helper text
-        },
-      }}
-      value={value || ''}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}
-      onBlur={handleBlur}
-      onFocus={handleFocus}
-      error={!!error}
-      helperText={error}
-      size={size}
-      {...addAttributes}
-    />
+    <FormControl fullWidth={fullWidth} style={style} error={!!error}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+        <label htmlFor={name} style={{ fontSize: '12px' }}>
+          {label}
+          {required && <span style={{ color: 'red' }}>*</span>}
+        </label>
+        {/* {helperText && <HelperTooltip helperText={helperText} />} */}
+      </div>
+      <TextField
+        id={name}
+        name={name}
+        placeholder={placeholder}
+        required={required}
+        value={value || ''}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        size={size}
+        {...addAttributes}
+        sx={{
+          '& .MuiInputBase-input': {
+            fontSize: '12px',
+            padding: '4px 8px',
+          },
+          '& .MuiFormHelperText-root': {
+            fontSize: '10px',
+            margin: '0px',
+          },
+        }}
+      />
+      {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>}
+    </FormControl>
   );
 };
 

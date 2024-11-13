@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField } from '@mui/material';
+import { FormControl, FormHelperText, TextField } from '@mui/material';
 
 interface CustomDatePickerProps {
   field: {
@@ -73,42 +73,39 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   };
 
   return (
-    <TextField
-      label={label}
-      name={name}
-      required={required}
-      placeholder={placeholder}
-      fullWidth={fullWidth}
-      sx={{
-        ...style,
-        '& .MuiInputBase-input': {
-          fontSize: '12px', // Smaller font size
-          padding: '4px 8px', // Smaller padding for input
-        },
-        '& .MuiFormHelperText-root': {
-          fontSize: '10px', // Smaller helper text
-        },
-      }}
-      value={value || ''}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}
-      onBlur={handleBlur}
-      onFocus={handleFocus}
-      error={!!error}
-      helperText={error}
-      InputLabelProps={{ shrink: true }}
-      size={size}
-      {...addAttributes}
-      InputProps={{
-        ...addAttributes?.InputProps,
-        inputComponent: 'input',
-        inputProps: {
-          type: 'date',
-          value: value || '',
-        },
-      }}
-    />
+    <FormControl fullWidth={fullWidth} style={style} error={!!error}>
+      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
+        {label}
+        {required && <span style={{ color: 'red' }}>*</span>}
+      </label>
+      <TextField
+        id={name}
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        value={value || ''}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        size={size}
+        {...addAttributes}
+        InputProps={{
+          ...addAttributes?.InputProps,
+          inputComponent: 'input',
+          inputProps: {
+            type: 'date',
+            value: value || '',
+          },
+        }}
+        sx={{
+          '& .MuiInputBase-input': { fontSize: '12px', padding: '4px 8px' },
+          '& .MuiFormHelperText-root': { fontSize: '10px', margin: '0px' },
+        }}
+      />
+      {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>}
+    </FormControl>
   );
 };
 

@@ -25,11 +25,12 @@ interface FieldConfig {
   required?: boolean;
   fullWidth?: boolean;
   style?: React.CSSProperties;
-  options?: Option[];
+  options?: [];
   validation?: ValidationRule;
   size?: 'small' | 'medium';
   col?: number;
   addAttributes?: Record<string, any>;
+  helperText?: string;
 }
 
 interface FormBuilderProps {

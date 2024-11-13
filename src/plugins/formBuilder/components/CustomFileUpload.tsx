@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
-
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, TextField, Typography, FormControl } from '@mui/material';
 
 interface CustomFileUploadProps {
   field: {
@@ -87,10 +85,15 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
   };
 
   return (
-    <Box sx={style}>
-      <Button variant="outlined" component="label" size={size} fullWidth={fullWidth}>
+    <FormControl fullWidth={fullWidth} sx={style} required={required} error={!!error}>
+      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
         {label}
+        {required && <span style={{ color: 'red' }}>*</span>}
+      </label>
+      <Button variant="outlined" component="label" size={size} fullWidth>
+        Upload File
         <input
+          id={name}
           type="file"
           name={name}
           hidden
@@ -112,7 +115,7 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
           {error}
         </Typography>
       )}
-    </Box>
+    </FormControl>
   );
 };
 
