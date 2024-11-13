@@ -80,7 +80,16 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
       required={required}
       fullWidth={fullWidth}
       size={size}
-      style={style}
+      sx={{
+        ...style,
+        '& .MuiInputBase-input': {
+          fontSize: '12px', // Smaller font size
+          padding: '4px 8px', // Smaller padding
+        },
+        '& .MuiFormHelperText-root': {
+          fontSize: '10px', // Smaller helper text
+        },
+      }}
       error={!!error}
       helperText={error}
       type="number"
