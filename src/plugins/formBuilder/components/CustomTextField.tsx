@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import { TextField } from '@mui/material';
 
 interface CustomTextFieldProps {
@@ -79,7 +80,17 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       placeholder={placeholder}
       required={required}
       fullWidth={fullWidth}
-      sx={style}
+      InputLabelProps={{ shrink: true }}
+      sx={{
+        ...style,
+        '& .MuiInputBase-input': {
+          fontSize: '12px', // Smaller font size
+          padding: '4px 8px', // Smaller padding
+        },
+        '& .MuiFormHelperText-root': {
+          fontSize: '10px', // Smaller helper text
+        },
+      }}
       value={value || ''}
       onChange={handleChange}
       onKeyDown={handleKeyDown}

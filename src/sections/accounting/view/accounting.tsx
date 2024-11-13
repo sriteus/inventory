@@ -19,14 +19,14 @@ const Accounting = () => {
         name: 'firstName',
         required: true,
         fullWidth: true,
-        col: 6,
+        col: 3,
         validation: {
           pattern: /^[A-Za-z]+$/,
           errorMessage: 'First name should only contain letters',
         },
         size: 'small',
         addAttributes: {
-          multiline: true, // Single-line input
+          // multiline: true, // Single-line input
           helperText: 'First name should only contain letters',
         },
       },
@@ -37,7 +37,7 @@ const Accounting = () => {
         name: 'dates',
         required: true,
         size: 'small',
-        col: 6,
+        col: 3,
         fullWidth: true,
         addAttributes: {
           helperText: 'Enter date',
@@ -49,7 +49,7 @@ const Accounting = () => {
         name: 'lastName',
         required: true,
         fullWidth: true,
-        col: 6,
+        col: 3,
         validation: {
           pattern: /^(?=.*[!@#$%^&*()_+={}:;'"<>,.?/~\\|]).*$/,
           errorMessage: 'Last name must contain at least one special character',
@@ -62,12 +62,13 @@ const Accounting = () => {
         name: 'country',
         fullWidth: true,
         required: true,
-        col: 6,
+        col: 3,
         options: [
           { label: 'India', value: 'IN' },
           { label: 'United States', value: 'US' },
           { label: 'Canada', value: 'CA' },
           { label: 'Australia', value: 'AU' },
+          { label: '', value: '' },
         ],
         // validation: {
         //   pattern: /^(IN|US|CA|AU)$/,
@@ -76,7 +77,7 @@ const Accounting = () => {
         size: 'small',
         addAttributes: {
           color: 'warning',
-          multiple: true,
+          // multiple: true,
         },
       },
       {

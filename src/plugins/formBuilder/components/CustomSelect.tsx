@@ -62,7 +62,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
 
   return (
     <FormControl fullWidth={fullWidth} sx={style} size={size} required={required} error={!!error}>
-      <InputLabel>{label}</InputLabel>
+      <InputLabel shrink>{label}</InputLabel>
       <Select
         label={label}
         value={Array.isArray(value) ? value : []} // Ensure the value is always an array
@@ -70,7 +70,16 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
         name={name}
         onBlur={onBlur}
         onFocus={onFocus}
-        // multiple
+        sx={{
+          '& .MuiSelect-select': {
+            fontSize: '12px', // Smaller font size for selected value
+            padding: '2px 8px', // Smaller padding for the select input
+          },
+          '& .MuiInputBase-root': {
+            fontSize: '12px', // Ensuring smaller font size for the select field
+            padding: '2px 8px', // Smaller padding for the select field
+          },
+        }}
         {...addAttributes} // Spread the addAttributes into the Select component
       >
         {options.length > 0 ? (
