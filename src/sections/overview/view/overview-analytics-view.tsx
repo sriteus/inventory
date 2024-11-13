@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography';
 
 import { _tasks, _posts, _timeline } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
+import Cookies from 'js-cookie';
 
 import { AnalyticsNews } from '../analytics-news';
 import { AnalyticsTasks } from '../analytics-tasks';
@@ -17,10 +18,11 @@ import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 // ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
+  const username = Cookies.get('username');
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Hi, Welcome back 👋
+        Hi, Welcome - {username}
       </Typography>
 
       <Grid container spacing={3}>

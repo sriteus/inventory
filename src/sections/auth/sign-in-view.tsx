@@ -1,3 +1,6 @@
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -13,24 +16,60 @@ import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
 
+// Define the type for the form state
+interface SignInForm {
+  username: string;
+  password: string;
+}
+
 // ----------------------------------------------------------------------
 
 export function SignInView() {
   const router = useRouter();
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   const [showPassword, setShowPassword] = useState(false);
+  const [formValues, setFormValues] = useState<SignInForm>({
+    username: 'testuser2',
+    password: 'testpassword',
+  });
 
-  const handleSignIn = useCallback(() => {
-    router.push('/');
-  }, [router]);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSignIn = useCallback(async () => {
+    const { username, password } = formValues;
+    try {
+      // Make API call to login
+      const response = await axios.post('http://localhost:3000/api/users/login', {
+        username,
+        password,
+      });
+      const { token } = response.data;
+      const decoded: any = jwtDecode(token);
+      Cookies.set('token', token, { expires: 7 });
+      Cookies.set('username', decoded.username, { expires: 7 });
+      router.push('/');
+    } catch (err) {
+      setError('Invalid username or password');
+    }
+  }, [formValues, router]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      [name]: value,
+    }));
+  };
 
   const renderForm = (
     <Box display="flex" flexDirection="column" alignItems="flex-end">
       <TextField
         fullWidth
-        name="email"
-        label="Email address"
-        defaultValue="hello@gmail.com"
+        name="username"
+        label="username address"
+        value={formValues.username}
+        onChange={handleChange}
         InputLabelProps={{ shrink: true }}
         sx={{ mb: 3 }}
       />
@@ -43,7 +82,8 @@ export function SignInView() {
         fullWidth
         name="password"
         label="Password"
-        defaultValue="@demo1234"
+        value={formValues.password}
+        onChange={handleChange}
         InputLabelProps={{ shrink: true }}
         type={showPassword ? 'text' : 'password'}
         InputProps={{
@@ -57,6 +97,13 @@ export function SignInView() {
         }}
         sx={{ mb: 3 }}
       />
+
+      {/* Display error message if validation fails */}
+      {error && (
+        <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
       <LoadingButton
         fullWidth

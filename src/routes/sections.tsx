@@ -8,7 +8,7 @@ import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 
-// ----------------------------------------------------------------------
+import PrivateRoute from 'src/sections/auth/ProtectedRoute';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
@@ -16,8 +16,8 @@ export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
-
-// ----------------------------------------------------------------------
+export const InventoryPage = lazy(() => import('src/pages/inventory'));
+export const AccountingPage = lazy(() => import('src/pages/accounting'));
 
 const renderFallback = (
   <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
@@ -43,10 +43,54 @@ export function Router() {
         </DashboardLayout>
       ),
       children: [
-        { element: <HomePage />, index: true },
-        { path: 'user', element: <UserPage /> },
-        { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
+        {
+          element: (
+            // <PrivateRoute>
+            <HomePage />
+            // </PrivateRoute>
+          ),
+          index: true,
+        },
+        {
+          path: 'user',
+          element: (
+            <PrivateRoute>
+              <UserPage />
+            </PrivateRoute>
+          ),
+        },
+        {
+          path: 'products',
+          element: (
+            <PrivateRoute>
+              <ProductsPage />
+            </PrivateRoute>
+          ),
+        },
+        {
+          path: 'blog',
+          element: (
+            <PrivateRoute>
+              <BlogPage />
+            </PrivateRoute>
+          ),
+        },
+        {
+          path: '/inventory',
+          element: (
+            // <PrivateRoute>
+            <InventoryPage />
+            // </PrivateRoute>
+          ),
+        },
+        {
+          path: '/accounting',
+          element: (
+            <PrivateRoute>
+              <AccountingPage />
+            </PrivateRoute>
+          ),
+        },
       ],
     },
     {

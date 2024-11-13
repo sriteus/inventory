@@ -1,10 +1,12 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 import Box from '@mui/material/Box';
 import ListItem from '@mui/material/ListItem';
 import { useTheme } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
 import ListItemButton from '@mui/material/ListItemButton';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 
@@ -13,13 +15,7 @@ import { RouterLink } from 'src/routes/components';
 
 import { varAlpha } from 'src/theme/styles';
 
-import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
-
-import { NavUpgrade } from '../components/nav-upgrade';
-import { WorkspacesPopover } from '../components/workspaces-popover';
-
-import type { WorkspacesPopoverProps } from '../components/workspaces-popover';
 
 // ----------------------------------------------------------------------
 
@@ -34,24 +30,24 @@ export type NavContentProps = {
     topArea?: React.ReactNode;
     bottomArea?: React.ReactNode;
   };
-  workspaces: WorkspacesPopoverProps['data'];
   sx?: SxProps<Theme>;
 };
 
+// Desktop Version with Open/Close Toggle Button
 export function NavDesktop({
   sx,
   data,
   slots,
-  workspaces,
   layoutQuery,
 }: NavContentProps & { layoutQuery: Breakpoint }) {
   const theme = useTheme();
+  const [isExpanded, setIsExpanded] = useState(false); // State to manage open/close
 
   return (
     <Box
       sx={{
         pt: 2.5,
-        px: 2.5,
+        px: 1.5,
         top: 0,
         left: 0,
         height: 1,
@@ -60,28 +56,40 @@ export function NavDesktop({
         flexDirection: 'column',
         bgcolor: 'var(--layout-nav-bg)',
         zIndex: 'var(--layout-nav-zIndex)',
-        width: 'var(--layout-nav-vertical-width)',
-        borderRight: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
+        width: isExpanded ? 'var(--layout-nav-vertical-width)' : 75,
+        borderRight: `1px solid var(--layout-nav-border-color, ${varAlpha(
+          theme.vars.palette.grey['500Channel'],
+          0.12
+        )})`,
         [theme.breakpoints.up(layoutQuery)]: {
           display: 'flex',
         },
+        transition: 'width 0.3s ease',
         ...sx,
       }}
     >
-      <NavContent data={data} slots={slots} workspaces={workspaces} />
+      <IconButton
+        onClick={() => setIsExpanded((prev) => !prev)}
+        sx={{
+          alignSelf: isExpanded ? 'flex-end' : 'center',
+          mb: 2,
+        }}
+      >
+        {isExpanded ? <FaTimes /> : <FaBars />}
+      </IconButton>
+
+      <NavContent data={data} slots={slots} isExpanded={isExpanded} />
     </Box>
   );
 }
 
-// ----------------------------------------------------------------------
-
+// Mobile Version
 export function NavMobile({
   sx,
   data,
   open,
   slots,
   onClose,
-  workspaces,
 }: NavContentProps & { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
 
@@ -107,23 +115,25 @@ export function NavMobile({
         },
       }}
     >
-      <NavContent data={data} slots={slots} workspaces={workspaces} />
+      <NavContent data={data} slots={slots} isExpanded />
     </Drawer>
   );
 }
 
-// ----------------------------------------------------------------------
-
-export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
+// NavContent Component with isExpanded prop for Desktop
+export function NavContent({
+  data,
+  slots,
+  sx,
+  isExpanded = false, // Default to false for desktop
+}: NavContentProps & { isExpanded?: boolean }) {
   const pathname = usePathname();
 
   return (
     <>
-      <Logo />
+      {/* <Logo sx={{ mb: 5 }} /> */}
 
       {slots?.topArea}
-
-      <WorkspacesPopover data={workspaces} sx={{ my: 2 }} />
 
       <Scrollbar fillContent>
         <Box component="nav" display="flex" flex="1 1 auto" flexDirection="column" sx={sx}>
@@ -149,23 +159,23 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                       minHeight: 'var(--layout-nav-item-height)',
                       ...(isActived && {
                         fontWeight: 'fontWeightSemiBold',
-                        bgcolor: 'var(--layout-nav-item-active-bg)',
-                        color: 'var(--layout-nav-item-active-color)',
+                        bgcolor: '#D0F0C0',
+                        color: 'green',
                         '&:hover': {
-                          bgcolor: 'var(--layout-nav-item-hover-bg)',
+                          bgcolor: '#D0F0C0',
                         },
                       }),
                     }}
                   >
-                    <Box component="span" sx={{ width: 24, height: 24 }}>
+                    <Box component="span" sx={{ width: 20, height: 20 }}>
                       {item.icon}
                     </Box>
 
-                    <Box component="span" flexGrow={1}>
-                      {item.title}
-                    </Box>
-
-                    {item.info && item.info}
+                    {isExpanded && (
+                      <Box component="span" flexGrow={1}>
+                        {item.title}
+                      </Box>
+                    )}
                   </ListItemButton>
                 </ListItem>
               );
@@ -175,8 +185,6 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
       </Scrollbar>
 
       {slots?.bottomArea}
-
-      <NavUpgrade />
     </>
   );
 }
