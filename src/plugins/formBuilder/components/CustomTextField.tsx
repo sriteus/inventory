@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, FormControl, FormHelperText } from '@mui/material';
-// import HelperTooltip from './HelperToolTip'; // Import the new component
+import HelperTooltip from './HelperToolTip';
 
 interface CustomTextFieldProps {
   field: {
@@ -91,7 +91,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
           {label}
           {required && <span style={{ color: 'red' }}>*</span>}
         </label>
-        {/* {helperText && <HelperTooltip helperText={helperText} />} */}
+        {helperText && <HelperTooltip helperText={helperText} />}
       </div>
       <TextField
         id={name}

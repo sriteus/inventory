@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, FormControl } from '@mui/material';
+import HelperTooltip from './HelperToolTip';
 
 interface CustomFileUploadProps {
   field: {
@@ -15,6 +16,7 @@ interface CustomFileUploadProps {
     };
     size?: 'small' | 'medium';
     addAttributes?: Record<string, any>;
+    helperText?: string;
   };
   value: File | null;
   onChange: (value: File | null) => void;
@@ -33,7 +35,8 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
   onBlur,
   onFocus,
 }) => {
-  const { label, name, required, fullWidth, style, validation, size, addAttributes } = field;
+  const { label, name, required, fullWidth, style, validation, size, addAttributes, helperText } =
+    field;
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,10 +89,14 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
 
   return (
     <FormControl fullWidth={fullWidth} sx={style} required={required} error={!!error}>
-      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
-        {label}
-        {required && <span style={{ color: 'red' }}>*</span>}
-      </label>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+        <label htmlFor={name} style={{ fontSize: '12px' }}>
+          {label}
+          {required && <span style={{ color: 'red' }}>*</span>}
+        </label>
+        {helperText && <HelperTooltip helperText={helperText} />}
+      </div>
+
       <Button variant="outlined" component="label" size={size} fullWidth>
         Upload File
         <input

@@ -37,6 +37,8 @@ const Accounting = () => {
         name: 'dates',
         required: true,
         size: 'small',
+        helperText: 'First name should only contain letters',
+
         col: 3,
         fullWidth: true,
         addAttributes: {
@@ -59,10 +61,11 @@ const Accounting = () => {
       {
         type: 'select',
         label: 'Country',
+        helperText: 'First name should only contain letters',
         name: 'country',
         fullWidth: true,
         required: true,
-        col: 3,
+        col: 6,
         options: [
           { label: 'Hong Kong', value: 'HG' },
           { label: 'India', value: 'IN' },
@@ -82,11 +85,12 @@ const Accounting = () => {
       },
       {
         type: 'file',
+        helperText: 'First name should only contain letters',
         label: 'Upload',
         name: 'fileUpload',
         required: true,
         fullWidth: true,
-        col: 3,
+        col: 6,
         size: 'small',
         validation: {
           // Add a simple validation for file type and size
@@ -97,6 +101,7 @@ const Accounting = () => {
       },
       {
         type: 'text',
+        helperText: 'First name should only contain letters',
         label: 'Bio',
         name: 'bio',
         // required: true,

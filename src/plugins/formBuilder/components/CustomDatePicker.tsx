@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FormControl, FormHelperText, TextField } from '@mui/material';
+import HelperTooltip from './HelperToolTip';
 
 interface CustomDatePickerProps {
   field: {
@@ -15,6 +16,7 @@ interface CustomDatePickerProps {
     };
     size?: 'small' | 'medium';
     addAttributes?: Record<string, any>;
+    helperText?: string;
   };
   value: string | null;
   onChange: (value: string | null) => void;
@@ -33,8 +35,18 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   onBlur,
   onFocus,
 }) => {
-  const { label, name, placeholder, required, fullWidth, style, validation, size, addAttributes } =
-    field;
+  const {
+    label,
+    name,
+    placeholder,
+    required,
+    fullWidth,
+    style,
+    validation,
+    size,
+    addAttributes,
+    helperText,
+  } = field;
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,10 +86,13 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   return (
     <FormControl fullWidth={fullWidth} style={style} error={!!error}>
-      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
-        {label}
-        {required && <span style={{ color: 'red' }}>*</span>}
-      </label>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+        <label htmlFor={name} style={{ fontSize: '12px' }}>
+          {label}
+          {required && <span style={{ color: 'red' }}>*</span>}
+        </label>
+        {helperText && <HelperTooltip helperText={helperText} />}
+      </div>
       <TextField
         id={name}
         name={name}

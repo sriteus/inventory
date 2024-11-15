@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Select, MenuItem, InputLabel, FormControl, FormHelperText } from '@mui/material';
+import HelperTooltip from './HelperToolTip'; // Assuming this is in the same directory
 
 interface Option {
   label: string;
@@ -15,6 +16,7 @@ interface CustomSelectProps {
     fullWidth?: boolean;
     size?: 'small' | 'medium';
     style?: React.CSSProperties;
+    helperText?: string; // Added helperText for tooltip
     validation?: {
       pattern?: RegExp;
       errorMessage?: string;
@@ -35,6 +37,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
     required,
     fullWidth,
     style,
+    helperText, // Added for tooltip
     validation,
     size,
     addAttributes,
@@ -62,10 +65,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
 
   return (
     <FormControl fullWidth={fullWidth} sx={style} size={size} required={required} error={!!error}>
-      <label htmlFor={name} style={{ display: 'block', marginBottom: '1px', fontSize: '12px' }}>
-        {label}
-        {required && <span style={{ color: 'red' }}>*</span>}
-      </label>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+        <label htmlFor={name} style={{ fontSize: '12px' }}>
+          {label}
+          {required && <span style={{ color: 'red' }}>*</span>}
+        </label>
+        {helperText && <HelperTooltip helperText={helperText} />}
+      </div>
       <Select
         id={name}
         value={Array.isArray(value) && value.length > 0 ? value : ''} // Set default empty value
