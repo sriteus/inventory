@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { FormBuilderRef } from 'src/plugins/formBuilder/main/FormBuilder';
 
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 import { Button, Typography } from '@mui/material';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
+import AccountingGrid from 'src/plugins/dataGridBuilder/SamplePages/AccountingGrid';
 
 const Accounting = () => {
   const formRef = useRef<FormBuilderRef>(null);
@@ -38,12 +39,8 @@ const Accounting = () => {
         required: true,
         size: 'small',
         helperText: 'First name should only contain letters',
-
         col: 3,
         fullWidth: true,
-        addAttributes: {
-          helperText: 'Enter date',
-        },
       },
       {
         type: 'text',
@@ -226,6 +223,9 @@ const Accounting = () => {
       </Typography>
       <div style={{ width: '50%' }}>
         <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
+      </div>
+      <div style={{ width: '50%' }}>
+        <AccountingGrid />
       </div>
       <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
     </DashboardContent>
