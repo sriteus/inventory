@@ -1,17 +1,19 @@
 /* eslint-disable arrow-body-style */
 /* eslint-disable @typescript-eslint/no-shadow */
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+
 import { Box, Grid, Button } from '@mui/material';
+
 import CustomSelect from '../components/CustomSelect';
 import CustomTextField from '../components/CustomTextField';
-import CustomNumberField from '../components/CustomNumberField';
 import CustomFileUpload from '../components/CustomFileUpload';
 import CustomDatePicker from '../components/CustomDatePicker';
+import CustomNumberField from '../components/CustomNumberField';
 
-interface Option {
-  label: string;
-  value: string | number;
-}
+// interface Option {
+//   label: string;
+//   value: string | number;
+// }
 
 interface ValidationRule {
   pattern?: RegExp;

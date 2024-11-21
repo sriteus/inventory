@@ -1,0 +1,77 @@
+export const excelStyle = {
+  border: '1px solid #E0E0E0',
+  backgroundColor: 'white',
+  '& .MuiDataGrid-cell': {
+    padding: '0px 8px',
+    borderRight: '1px solid #E0E0E0',
+    borderBottom: '1px solid #E0E0E0',
+    fontSize: '14px',
+    lineHeight: '22px !important',
+    height: '22px !important',
+    minHeight: '22px !important',
+    maxHeight: '22px !important',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    display: 'flex !important',
+    alignItems: 'center !important',
+    '&:focus': {
+      outline: 'none',
+    },
+    '&:focus-within': {
+      outline: '2px solid #1976d2',
+      outlineOffset: '-2px',
+    },
+    '& > div': {
+      maxHeight: '22px !important',
+      lineHeight: '22px !important',
+    },
+  },
+  '& .MuiDataGrid-row': {
+    maxHeight: '22px !important',
+    minHeight: '22px !important',
+  },
+  '& .MuiDataGrid-columnHeader': {
+    padding: '0px 8px',
+    height: '24px !important',
+    minHeight: '24px !important',
+    maxHeight: '24px !important',
+    backgroundColor: '#F5F5F5',
+    borderRight: '1px solid #E0E0E0',
+    borderBottom: '1px solid #E0E0E0',
+    display: 'flex',
+    alignItems: 'center',
+    '&:focus': {
+      outline: 'none',
+    },
+  },
+  '& .MuiDataGrid-columnHeaders': {
+    height: '24px !important',
+    minHeight: '24px !important',
+    maxHeight: '24px !important',
+    lineHeight: '24px !important',
+  },
+  '& .MuiDataGrid-columnHeaderTitle': {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    lineHeight: '24px',
+  },
+  '& .MuiDataGrid-cell--selected': {
+    outline: 'none !important',
+  },
+  '& .MuiDataGrid-editInputCell': {
+    padding: '0px 8px',
+    height: '22px',
+    fontSize: '14px',
+    lineHeight: '22px',
+  },
+  '& .MuiDataGrid-cellContent': {
+    lineHeight: '22px !important',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+};
