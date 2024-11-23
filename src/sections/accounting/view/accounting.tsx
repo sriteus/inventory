@@ -8,6 +8,9 @@ import { Button, Typography } from '@mui/material';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
 import AccountingGrid from 'src/plugins/dataGridBuilder/SamplePages/AccountingGrid';
+import Tabula from 'src/plugins/tabulator/Tabula';
+import TestGrid from 'src/plugins/muigrid/TestGrid';
+import Adaz from 'src/plugins/muigrid/Adaz';
 
 const Accounting = () => {
   const formRef = useRef<FormBuilderRef>(null);
@@ -217,18 +220,22 @@ const Accounting = () => {
     collegeName: 'XYZ College',
   };
   return (
-    <DashboardContent>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Accounting Form
-      </Typography>
-      <div style={{ width: '50%' }}>
-        <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
-      </div>
-      <div style={{ width: '50%' }}>
-        <AccountingGrid />
-      </div>
-      <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
-    </DashboardContent>
+    <div>
+      <DashboardContent>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Accounting Form
+        </Typography>
+        <div style={{ width: '50%' }}>
+          <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
+        </div>
+        <div style={{ width: '50%' }}>
+          <AccountingGrid />
+          <Adaz />
+        </div>
+        <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
+        {/* <TestGrid /> */}
+      </DashboardContent>
+    </div>
   );
 };
 

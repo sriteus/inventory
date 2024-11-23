@@ -1,0 +1,13 @@
+.tabulator-container .tabulator-header .tabulator-cell {
+  font-size: 14px; /* Adjust font size for clarity */
+}
+
+.tabulator-container .tabulator-row .tabulator-cell {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden; /* Prevent overlapping text */
+}
+
+.tabulator-container .tabulator-row {
+  height: auto; /* Allow rows to expand if content grows */
+}

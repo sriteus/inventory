@@ -1,10 +1,9 @@
 import type { GridRowsProp, GridRowModel } from '@mui/x-data-grid';
 
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
-
 import { styled } from '@mui/material/styles';
 import { Box, Button, IconButton } from '@mui/material';
 import { DataGrid, GridDeleteIcon } from '@mui/x-data-grid';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 
 import { excelStyle } from './excelStyle';
 
@@ -117,7 +116,8 @@ const DataGridBuilder = forwardRef<DataGridBuilderRef, DataGridBuilderProps>(
           onCellClick={handleCellClick}
           onCellEditStop={handleCellEdit}
           disableColumnMenu
-          hideFooter
+          // hideFooter
+
           density="compact"
         />
         <Button
