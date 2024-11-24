@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 /* eslint-disable no-plusplus */
 /* eslint-disable import/no-duplicates */
-
 /* eslint-disable react/jsx-no-bind */
-import DataGrid from 'react-data-grid';
-import { textEditor } from 'react-data-grid';
+import DataGrid, { CellKeyDownArgs, CellClickArgs } from 'react-data-grid';
 import React, { useMemo, useState } from 'react';
 import 'react-data-grid/lib/styles.css';
+import { Autocomplete, TextField } from '@mui/material';
 
 interface Row {
   id: number;
@@ -49,11 +48,26 @@ const Adaz: React.FC = () => {
     console.log(`Cell blurred: ${cellKey}, Row: ${rowIndex}`);
   };
 
+  // Update onCellKeyDown handler to match the expected type
+  const handleCellKeyDown = (
+    args: CellKeyDownArgs<Row, SummaryRow>,
+    event: React.KeyboardEvent
+  ) => {
+    console.log(`Key pressed: ${event.key}, Cell: ${args.column.key}, Row: ${args.rowIdx}`);
+  };
+
+  // New onCellClick handler
+  const handleCellClick = (args: CellClickArgs<Row, SummaryRow>, event: React.MouseEvent) => {
+    console.log(`Cell clicked: ${args.column.key}, Row: ${args.row}`);
+    // Perform additional actions if needed
+  };
+
   const columns = useMemo(
     () => [
       {
         key: 'id',
         name: 'ID',
+        resizable: true,
         renderSummaryCell({ row }: { row: SummaryRow }) {
           return <strong>{row.totalCount} Total</strong>;
         },
@@ -62,14 +76,31 @@ const Adaz: React.FC = () => {
         key: 'firstName',
         name: 'First Name',
         renderEditCell: (props: any) => (
-          <input
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            type="text"
+          <Autocomplete
+            size="small" // Make the autocomplete smaller
+            sx={{
+              width: '100%', // Use full width for the container
+              height: 40, // Set a specific height to make it smaller
+              padding: 0, // Remove padding
+              marginTop: -1, // Adjust margin to make it look more compact
+            }}
             value={props.row.firstName}
-            onFocus={() => handleFocus('firstName', props.rowIdx + 1)}
-            onBlur={() => handleBlur('firstName', props.rowIndex)}
-            onChange={(e) => props.onRowChange({ ...props.row, firstName: e.target.value })}
-            autoFocus
+            onChange={(event, newValue) =>
+              props.onRowChange({ ...props.row, firstName: newValue || '' })
+            }
+            options={['First 0', 'First 1', 'First 2', 'First 3', 'First 4']}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="outlined"
+                size="small" // Set the text input size to small
+                sx={{ height: '30px' }} // Adjust the height of the input field itself
+                onFocus={() => handleFocus('firstName', props.rowIdx + 1)}
+                onBlur={() => handleBlur('firstName', props.rowIndex)}
+                fullWidth
+                autoFocus
+              />
+            )}
           />
         ),
         editable: true,
@@ -174,7 +205,7 @@ const Adaz: React.FC = () => {
   }
 
   return (
-    <div style={{ height: 350, width: '100%' }}>
+    <div style={{ height: 350, width: '100%', overflow: 'auto' }}>
       <DataGrid
         columns={columns}
         rows={rows}
@@ -182,6 +213,10 @@ const Adaz: React.FC = () => {
         rowKeyGetter={(row) => row.id}
         bottomSummaryRows={summaryRows}
         className="rdg-light"
+        onCellKeyDown={handleCellKeyDown} // Add the onCellKeyDown event handler
+        onCellClick={handleCellClick} // Add the onCellClick event handler
+        summaryRowHeight={25}
+        rowHeight={25}
       />
     </div>
   );
