@@ -1,4 +1,3 @@
-import React from 'react';
 import DataGrid, { textEditor } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 

@@ -1,11 +1,15 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 /* eslint-disable no-plusplus */
 /* eslint-disable import/no-duplicates */
-/* eslint-disable react/jsx-no-bind */
-import DataGrid, { CellKeyDownArgs, CellClickArgs } from 'react-data-grid';
-import React, { useMemo, useState } from 'react';
 import 'react-data-grid/lib/styles.css';
-import { Autocomplete, TextField } from '@mui/material';
+
+/* eslint-disable react/jsx-no-bind */
+import type { CellClickArgs, CellKeyDownArgs } from 'react-data-grid';
+
+import DataGrid from 'react-data-grid';
+import React, { useMemo, useState } from 'react';
+
+import { TextField, Autocomplete } from '@mui/material';
 
 interface Row {
   id: number;
