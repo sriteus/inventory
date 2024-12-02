@@ -10,6 +10,7 @@ import DataGrid from 'react-data-grid';
 import React, { useMemo, useState } from 'react';
 
 import { TextField, Autocomplete } from '@mui/material';
+import ProductTable from './ProductTable';
 
 interface Row {
   id: number;
@@ -43,6 +44,7 @@ function createRows(): Row[] {
 
 const Adaz: React.FC = () => {
   const [rows, setRows] = useState(createRows);
+  const [selectedRowDetails, setSelectedRowDetails] = useState<any>(null);
 
   const handleFocus = (cellKey: string, rowIndex: number) => {
     console.log(`Cell focused: ${cellKey}, Row: ${rowIndex}`);
@@ -63,7 +65,8 @@ const Adaz: React.FC = () => {
   // New onCellClick handler
   const handleCellClick = (args: CellClickArgs<Row, SummaryRow>, event: React.MouseEvent) => {
     console.log(`Cell clicked: ${args.column.key}, Row: ${args.row}`);
-    // Perform additional actions if needed
+    // Set the details of the clicked row in the state
+    setSelectedRowDetails(JSON.stringify(args.row, null, 2)); // Convert row data to a formatted string
   };
 
   const columns = useMemo(
@@ -207,9 +210,12 @@ const Adaz: React.FC = () => {
     console.log('Data changed:', newRows);
     setRows(newRows);
   }
-
+  if (selectedRowDetails) {
+    const parsedDetails = JSON.parse(selectedRowDetails);
+    console.log(parsedDetails.firstName); // Logs the correct value
+  }
   return (
-    <div style={{ height: 350, width: '100%', overflow: 'auto' }}>
+    <div style={{ height: 500, width: '100%', overflow: 'auto' }}>
       <DataGrid
         columns={columns}
         rows={rows}
@@ -222,6 +228,14 @@ const Adaz: React.FC = () => {
         summaryRowHeight={25}
         rowHeight={25}
       />
+
+      {selectedRowDetails && <ProductTable userName={JSON.parse(selectedRowDetails).firstName} />}
+      {selectedRowDetails && (
+        <div>
+          <h3>Selected Row Details:</h3>
+          <pre>{selectedRowDetails}</pre>
+        </div>
+      )}
     </div>
   );
 };

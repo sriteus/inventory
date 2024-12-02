@@ -5,112 +5,14 @@ import { useRef, useEffect } from 'react';
 
 import { Button, Typography } from '@mui/material';
 
+import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
-import AccountingGrid from 'src/plugins/dataGridBuilder/SamplePages/AccountingGrid';
+
+import { jsonTest } from './test';
 
 const Accounting = () => {
   const formRef = useRef<FormBuilderRef>(null);
-
-  const formConfig = {
-    fields: [
-      {
-        type: 'text',
-        label: 'First Name',
-        name: 'firstName',
-        required: true,
-        fullWidth: true,
-        helperText: 'First name should only contain letters',
-        col: 3,
-        validation: {
-          pattern: /^[A-Za-z]+$/,
-          errorMessage: 'First name should only contain letters',
-        },
-        size: 'small',
-        addAttributes: {
-          // multiline: true, // Single-line input
-        },
-      },
-
-      {
-        type: 'date', // You may change this to 'select' or 'number' as needed
-        label: 'Date',
-        name: 'dates',
-        required: true,
-        size: 'small',
-        helperText: 'First name should only contain letters',
-        col: 3,
-        fullWidth: true,
-      },
-      {
-        type: 'text',
-        label: 'Last Name',
-        name: 'lastName',
-        required: true,
-        fullWidth: true,
-        col: 3,
-        validation: {
-          pattern: /^(?=.*[!@#$%^&*()_+={}:;'"<>,.?/~\\|]).*$/,
-          errorMessage: 'Last name must contain at least one special character',
-        },
-        size: 'small',
-      },
-      {
-        type: 'select',
-        label: 'Country',
-        helperText: 'First name should only contain letters',
-        name: 'country',
-        fullWidth: true,
-        required: true,
-        col: 6,
-        options: [
-          { label: 'Hong Kong', value: 'HG' },
-          { label: 'India', value: 'IN' },
-          { label: 'United States', value: 'US' },
-          { label: 'Canada', value: 'CA' },
-          { label: 'Australia', value: 'AU' },
-        ],
-        validation: {
-          pattern: /^(HG|IN|US|CA|AU)$/,
-          errorMessage: 'Please select a valid country',
-        },
-        size: 'small',
-        addAttributes: {
-          color: 'warning',
-          // multiple: true,
-        },
-      },
-      {
-        type: 'file',
-        helperText: 'First name should only contain letters',
-        label: 'Upload',
-        name: 'fileUpload',
-        required: true,
-        fullWidth: true,
-        col: 6,
-        size: 'small',
-        validation: {
-          // Add a simple validation for file type and size
-          fileType: ['image/jpeg', 'image/png'], // Example: only allow JPG or PNG images
-          maxSize: 5 * 1024 * 1024, // Example: Max file size 5MB
-          errorMessage: 'Please upload a valid image file (JPG/PNG, max 5MB)',
-        },
-      },
-      {
-        type: 'text',
-        helperText: 'First name should only contain letters',
-        label: 'Bio',
-        name: 'bio',
-        // required: true,
-        fullWidth: true,
-        col: 6,
-        size: 'small',
-        addAttributes: {
-          multiline: true, // Single-line input
-        },
-      },
-    ],
-  };
 
   const school: any = {
     type: 'text',
@@ -217,18 +119,24 @@ const Accounting = () => {
     collegeName: 'XYZ College',
   };
   return (
-    <DashboardContent>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Accounting Form
-      </Typography>
-      <div style={{ width: '50%' }}>
-        <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
-      </div>
-      <div style={{ width: '50%' }}>
-        <AccountingGrid />
-      </div>
-      <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
-    </DashboardContent>
+    <div>
+      <DashboardContent>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Accounting Form
+        </Typography>
+        <div style={{ width: '50%' }}>
+          <FormBuilder ref={formRef} config={jsonTest.data[0]} initialData={initialData} />
+          {/* <FormBuilder json={jsonTest} /> */}
+        </div>
+        <div style={{ width: '50%', display: 'flex', flexDirection: 'row', gap: '10px' }}>
+          {/* <AccountingGrid /> */}
+          <Adaz />
+          {/* <Adaz /> */}
+        </div>
+        <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
+        {/* <TestGrid /> */}
+      </DashboardContent>
+    </div>
   );
 };
 

@@ -50,7 +50,6 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
     helperText, // Get helperText
   } = field;
   const [error, setError] = useState<string | null>(null);
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
     onChange(inputValue);
@@ -85,7 +84,6 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       onFocus(event);
     }
   };
-
   return (
     <FormControl fullWidth={fullWidth} style={style} error={!!error}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>

@@ -1,162 +1,104 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { FormBuilderRef } from 'src/plugins/formBuilder/main/FormBuilder';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import axios from 'axios';
 
 import { Button, Typography } from '@mui/material';
 
+import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
-import AccountingGrid from 'src/plugins/dataGridBuilder/SamplePages/AccountingGrid';
-import Tabula from 'src/plugins/tabulator/Tabula';
-import TestGrid from 'src/plugins/muigrid/TestGrid';
-import Adaz from 'src/plugins/muigrid/Adaz';
+
+import { jsonTest } from './test';
 
 const Accounting = () => {
   const formRef = useRef<FormBuilderRef>(null);
-
-  const formConfig = {
-    fields: [
-      {
-        type: 'text',
-        label: 'First Name',
-        name: 'firstName',
-        required: true,
-        fullWidth: true,
-        helperText: 'First name should only contain letters',
-        col: 3,
-        validation: {
-          pattern: /^[A-Za-z]+$/,
-          errorMessage: 'First name should only contain letters',
-        },
-        size: 'small',
-        addAttributes: {
-          // multiline: true, // Single-line input
-        },
-      },
-
-      {
-        type: 'date', // You may change this to 'select' or 'number' as needed
-        label: 'Date',
-        name: 'dates',
-        required: true,
-        size: 'small',
-        helperText: 'First name should only contain letters',
-        col: 3,
-        fullWidth: true,
-      },
-      {
-        type: 'text',
-        label: 'Last Name',
-        name: 'lastName',
-        required: true,
-        fullWidth: true,
-        col: 3,
-        validation: {
-          pattern: /^(?=.*[!@#$%^&*()_+={}:;'"<>,.?/~\\|]).*$/,
-          errorMessage: 'Last name must contain at least one special character',
-        },
-        size: 'small',
-      },
-      {
-        type: 'select',
-        label: 'Country',
-        helperText: 'First name should only contain letters',
-        name: 'country',
-        fullWidth: true,
-        required: true,
-        col: 6,
-        options: [
-          { label: 'Hong Kong', value: 'HG' },
-          { label: 'India', value: 'IN' },
-          { label: 'United States', value: 'US' },
-          { label: 'Canada', value: 'CA' },
-          { label: 'Australia', value: 'AU' },
-        ],
-        validation: {
-          pattern: /^(HG|IN|US|CA|AU)$/,
-          errorMessage: 'Please select a valid country',
-        },
-        size: 'small',
-        addAttributes: {
-          color: 'warning',
-          // multiple: true,
-        },
-      },
-      {
-        type: 'file',
-        helperText: 'First name should only contain letters',
-        label: 'Upload',
-        name: 'fileUpload',
-        required: true,
-        fullWidth: true,
-        col: 6,
-        size: 'small',
-        validation: {
-          // Add a simple validation for file type and size
-          fileType: ['image/jpeg', 'image/png'], // Example: only allow JPG or PNG images
-          maxSize: 5 * 1024 * 1024, // Example: Max file size 5MB
-          errorMessage: 'Please upload a valid image file (JPG/PNG, max 5MB)',
-        },
-      },
-      {
-        type: 'text',
-        helperText: 'First name should only contain letters',
-        label: 'Bio',
-        name: 'bio',
-        // required: true,
-        fullWidth: true,
-        col: 6,
-        size: 'small',
-        addAttributes: {
-          multiline: true, // Single-line input
-        },
-      },
-    ],
-  };
-
-  const school: any = {
-    type: 'text',
-    label: 'School Name',
-    name: `schoolName`,
-    fullWidth: true,
-    col: 12,
-    size: 'small',
-    addAttributes: {
-      color: 'warning',
-    },
-  };
-  const college: any = {
-    type: 'select',
-    label: 'Counftry',
-    name: 'ssss',
-    fullWidth: true,
-    required: true,
-    col: 12,
-    options: [
-      { label: 'India', value: 'IN' },
-      { label: 'United States', value: 'US' },
-      { label: 'Canada', value: 'CA' },
-      { label: 'Australia', value: 'AU' },
-    ],
-    validation: {
-      pattern: /^(IN|US|CA|AU)$/,
-      errorMessage: 'Please select a valid country',
-    },
-    size: 'small',
-  };
+  const [formConfig, setFormConfig] = useState(null); // State to hold form configuration
+  const [loading, setLoading] = useState(true); // State to manage loading
 
   const handleOnChange = (data: Record<string, any>) => {
     console.log('Form data changed:', data);
-    if (data.firstName === 'Sarthak') {
-      handleAddField(school);
-      handleRemoveField('ssss');
-    } else if (data.firstName === 'Sonal') {
-      handleAddField(college);
-      handleRemoveField('schoolName');
-    }
   };
 
+  const handleFocus = (fieldName: string, event: any) => {
+    console.log('Accounting Focus:', {
+      fieldName,
+      value: event.target.value,
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const handleKeyDown = (fieldName: string, event: any) => {
+    // if (event.key === 'Tab') {
+    //   console.log(`Enter pressed on ${fieldName}`);
+    // }
+  };
+
+  const handleKeyUp = (fieldName: string, event: any) => {
+    // console.log('Accounting KeyUp:', {
+    //   fieldName,
+    //   key: event.key,
+    //   value: event.target.value,
+    //   timestamp: new Date().toISOString(),
+    // });
+  };
+
+  const handleBlur = (fieldName: string, event: any) => {
+    // console.log('Accounting Blur:', {
+    //   fieldName,
+    //   value: event.target.value,
+    //   timestamp: new Date().toISOString(),
+    // });
+  };
+
+  const handleAddField = (newField: any) => {
+    formRef.current?.addField(newField);
+  };
+
+  const handleRemoveField = (fieldName: string) => {
+    formRef.current?.removeField(fieldName);
+  };
+
+  const initialData = {
+    name: 'Sartha',
+    lastName: 'Doe',
+    schoolName: 'ABC School',
+    collegeName: 'XYZ College',
+  };
+
+  // Fetch form configuration from the API
+  useEffect(() => {
+    const fetchFormConfig = async () => {
+      try {
+        const response = await axios.post(
+          'http://localhost:8003/api/formio',
+          {
+            action: 'schema',
+            formId: 'parentalinfo',
+            data: {},
+            initData: {},
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization:
+                'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpc3RyYXRpb25pZCI6IjMiLCJlbWFpbCI6Im9yYUB1cHNjLmluIiwibmFtZSI6Ik9SQSBNYWluIiwiaWF0IjoxNzMyNjk5OTI1LCJleHAiOjE3MzMyOTk5MjV9.qsZeal3xWdm2bcpZ_O85w-H0L6x4JhHvTQZgx3OwV5w',
+            },
+          }
+        );
+        setFormConfig(response.data.data[0]); // Set the fetched form configuration
+      } catch (error) {
+        console.error('Error fetching form configuration:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFormConfig();
+  }, []);
+
+  // Register event handlers once `formRef.current` is set
   useEffect(() => {
     if (formRef.current) {
       formRef.current.onChange(handleOnChange);
@@ -166,74 +108,38 @@ const Accounting = () => {
       formRef.current.onFocus(handleFocus);
       console.log('All event handlers registered');
     }
-  }, []);
-  const handleFocus = (fieldName: string, event: any) => {
-    console.log('Accounting Focus:', {
-      fieldName,
-      value: event.currentTarget.value,
-      timestamp: new Date().toISOString(),
-    });
-  };
 
-  const handleKeyDown = (fieldName: string, event: any) => {
-    // console.log('Accounting KeyDown:', {
-    //   fieldName,
-    //   key: event.key,
-    //   value: event.currentTarget.value,
-    //   timestamp: new Date().toISOString(),
-    // });
-    if (event.key === 'Tab') {
-      console.log(`Enter pressed on ${fieldName}`);
+    // return () => {
+    //   if (formRef.current) {
+    //     formRef.current.onChange(null);
+    //     formRef.current.onKeyDown(null);
+    //     formRef.current.onKeyUp(null);
+    //     formRef.current.onBlur(null);
+    //     formRef.current.onFocus(null);
+    //   }
+    // };
+  }, [formRef.current]);
 
-      // Add your Enter key logic here
-    }
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  const handleKeyUp = (fieldName: string, event: any) => {
-    console.log('Accounting KeyUp:', {
-      fieldName,
-      key: event.key,
-      value: event.currentTarget.value,
-      timestamp: new Date().toISOString(),
-    });
-  };
-
-  const handleBlur = (fieldName: string, event: any) => {
-    console.log('Accounting Blur:', {
-      fieldName,
-      value: event.currentTarget.value,
-      timestamp: new Date().toISOString(),
-    });
-  };
-  const handleAddField = (newField: any) => {
-    formRef.current?.addField(newField);
-  };
-
-  const handleRemoveField = (fieldName: string) => {
-    formRef.current?.removeField(fieldName);
-  };
-  const initialData = {
-    firstName: 'Sartha',
-    lastName: 'Doe',
-    // country: 'IN',
-    schoolName: 'ABC School',
-    collegeName: 'XYZ College',
-  };
   return (
     <div>
       <DashboardContent>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Accounting Form
         </Typography>
-        <div style={{ width: '50%' }}>
-          <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
+        <div style={{ width: '70%', marginBottom: '30px' }}>
+          {formConfig && (
+            <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
+          )}
         </div>
-        <div style={{ width: '50%' }}>
-          <AccountingGrid />
+
+        <div style={{ width: '50%', display: 'flex', flexDirection: 'row', gap: '10px' }}>
           <Adaz />
         </div>
         <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
-        {/* <TestGrid /> */}
       </DashboardContent>
     </div>
   );

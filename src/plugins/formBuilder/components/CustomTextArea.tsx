@@ -4,7 +4,7 @@ import { TextField, FormControl, FormHelperText } from '@mui/material';
 
 import HelperTooltip from './HelperToolTip';
 
-interface CustomTextFieldProps {
+interface CustomTextAreaProps {
   field: {
     label: string;
     name: string;
@@ -28,7 +28,7 @@ interface CustomTextFieldProps {
   onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
 }
 
-const CustomTextField: React.FC<CustomTextFieldProps> = ({
+const CustomTextArea: React.FC<CustomTextAreaProps> = ({
   field,
   value,
   onChange,
@@ -50,7 +50,6 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
     helperText, // Get helperText
   } = field;
   const [error, setError] = useState<string | null>(null);
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
     onChange(inputValue);
@@ -85,7 +84,6 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       onFocus(event);
     }
   };
-
   return (
     <FormControl fullWidth={fullWidth} style={style} error={!!error}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
@@ -107,6 +105,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
         onBlur={handleBlur}
         onFocus={handleFocus}
         size={size}
+        multiline
         {...addAttributes}
         sx={{
           '& .MuiInputBase-input': {
@@ -124,4 +123,4 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   );
 };
 
-export default CustomTextField;
+export default CustomTextArea;

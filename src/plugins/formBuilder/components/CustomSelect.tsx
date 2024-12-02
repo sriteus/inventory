@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Select, MenuItem, InputLabel, FormControl, FormHelperText } from '@mui/material';
+
+import { Select, MenuItem, FormControl, FormHelperText } from '@mui/material';
+
 import HelperTooltip from './HelperToolTip'; // Assuming this is in the same directory
 
 interface Option {
@@ -11,7 +13,7 @@ interface CustomSelectProps {
   field: {
     label: string;
     name: string;
-    options?: Option[];
+    options?: any; // Define options here as part of the field
     required?: boolean;
     fullWidth?: boolean;
     size?: 'small' | 'medium';
@@ -24,7 +26,7 @@ interface CustomSelectProps {
     addAttributes?: Record<string, any>; // Add additional attributes
   };
   value: any; // value can be any type, but should be an array when multiple is used
-  onChange: (value: any[]) => void;
+  onChange: (value: any) => void;
   onBlur?: (event: React.FocusEvent) => void;
   onFocus?: (event: React.FocusEvent) => void;
 }
@@ -37,20 +39,23 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
     required,
     fullWidth,
     style,
-    helperText, // Added for tooltip
+    helperText,
     validation,
     size,
     addAttributes,
   } = field;
-
+  let slectOptions = [];
+  if (options.length !== 0) {
+    slectOptions = options.data;
+  }
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (event: any) => {
     let selectedValue = event.target.value;
 
-    // Ensure the value is an array for multiple selections
-    if (!Array.isArray(selectedValue)) {
-      selectedValue = [selectedValue];
+    // If it's a single select, we don't need to wrap it in an array
+    if (Array.isArray(selectedValue)) {
+      selectedValue = selectedValue.length === 1 ? selectedValue[0] : selectedValue;
     }
 
     onChange(selectedValue);
@@ -74,7 +79,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
       </div>
       <Select
         id={name}
-        value={Array.isArray(value) && value.length > 0 ? value : ''} // Set default empty value
+        value={value || ''} // Default to empty string if value is undefined or null
         onChange={handleChange}
         name={name}
         onBlur={onBlur}
@@ -91,9 +96,9 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ field, value, onChange, onB
         }}
         {...addAttributes} // Spread the addAttributes into the Select component
       >
-        {options.length > 0 ? (
-          options.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
+        {slectOptions.length > 0 ? (
+          slectOptions.map((option: any, index: any) => (
+            <MenuItem key={index} value={option.value}>
               {option.label}
             </MenuItem>
           ))

@@ -36,4 +36,5 @@ public/*
 **/jsconfig.json
 # **/src
 **/src/plugins/muigrid/TestGrid.tsx
+**/src/plugins
 

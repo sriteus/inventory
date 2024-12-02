@@ -4,7 +4,7 @@
 import 'react-data-grid/lib/styles.css';
 
 /* eslint-disable react/jsx-no-bind */
-import type { CellKeyDownArgs } from 'react-data-grid';
+import type { CellClickArgs, CellKeyDownArgs } from 'react-data-grid';
 
 import DataGrid from 'react-data-grid';
 import React, { useMemo, useState } from 'react';
@@ -43,6 +43,7 @@ function createRows(): Row[] {
 
 const Adaz: React.FC = () => {
   const [rows, setRows] = useState(createRows);
+  const [selectedRowDetails, setSelectedRowDetails] = useState<string | null>(null);
 
   const handleFocus = (cellKey: string, rowIndex: number) => {
     console.log(`Cell focused: ${cellKey}, Row: ${rowIndex}`);
@@ -58,6 +59,13 @@ const Adaz: React.FC = () => {
     event: React.KeyboardEvent
   ) => {
     console.log(`Key pressed: ${event.key}, Cell: ${args.column.key}, Row: ${args.rowIdx}`);
+  };
+
+  // New onCellClick handler
+  const handleCellClick = (args: CellClickArgs<Row, SummaryRow>, event: React.MouseEvent) => {
+    console.log(`Cell clicked: ${args.column.key}, Row: ${JSON.stringify(args.row, null, 2)}`);
+    // Set the details of the clicked row in the state
+    setSelectedRowDetails(JSON.stringify(args.row, null, 2)); // Convert row data to a formatted string
   };
 
   const columns = useMemo(
@@ -203,7 +211,7 @@ const Adaz: React.FC = () => {
   }
 
   return (
-    <div style={{ height: 350, width: '100%', overflow: 'auto' }}>
+    <div style={{ height: 500, width: '100%', overflow: 'auto' }}>
       <DataGrid
         columns={columns}
         rows={rows}
@@ -212,7 +220,16 @@ const Adaz: React.FC = () => {
         bottomSummaryRows={summaryRows}
         className="rdg-light"
         onCellKeyDown={handleCellKeyDown} // Add the onCellKeyDown event handler
+        onCellClick={handleCellClick} // Add the onCellClick event handler
+        summaryRowHeight={25}
+        rowHeight={25}
       />
+      {selectedRowDetails && (
+        <div>
+          <h3>Selected Row Details:</h3>
+          <pre>{selectedRowDetails}</pre>
+        </div>
+      )}
     </div>
   );
 };

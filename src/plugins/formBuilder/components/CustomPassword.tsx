@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-
-import { TextField, FormControl, FormHelperText } from '@mui/material';
-
+import { TextField, FormControl, FormHelperText, InputAdornment } from '@mui/material';
 import HelperTooltip from './HelperToolTip';
 
-interface CustomTextFieldProps {
+interface PasswordFieldProps {
   field: {
     label: string;
     name: string;
@@ -28,7 +26,7 @@ interface CustomTextFieldProps {
   onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
 }
 
-const CustomTextField: React.FC<CustomTextFieldProps> = ({
+const PasswordField: React.FC<PasswordFieldProps> = ({
   field,
   value,
   onChange,
@@ -47,9 +45,11 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
     validation,
     size,
     addAttributes,
-    helperText, // Get helperText
+    helperText,
   } = field;
+
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -86,6 +86,10 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <FormControl fullWidth={fullWidth} style={style} error={!!error}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
@@ -101,6 +105,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
         placeholder={placeholder}
         required={required}
         value={value || ''}
+        type={showPassword ? 'text' : 'password'}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
@@ -108,6 +113,39 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
         onFocus={handleFocus}
         size={size}
         {...addAttributes}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#007BFF',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                {showPassword ? (
+                  <img
+                    src="src/plugins/formBuilder/components/svg/openedeye.svg"
+                    alt="Hidden"
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                ) : (
+                  <img
+                    src="src/plugins/formBuilder/components/svg/closedeye.svg"
+                    alt="Shown"
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                )}
+              </button>
+            </InputAdornment>
+          ),
+        }}
         sx={{
           '& .MuiInputBase-input': {
             fontSize: '12px',
@@ -124,4 +162,4 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   );
 };
 
-export default CustomTextField;
+export default PasswordField;
