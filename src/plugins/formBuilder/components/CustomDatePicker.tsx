@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { TextField, FormControl, FormHelperText } from '@mui/material';
 
 import HelperTooltip from './HelperToolTip';
+import ErrorTooltip from './ErrorTooltip';
 
 interface CustomDatePickerProps {
   field: {
@@ -19,6 +20,7 @@ interface CustomDatePickerProps {
     size?: 'small' | 'medium';
     addAttributes?: Record<string, any>;
     helperText?: string;
+    disabled?: any;
   };
   value: string | null;
   onChange: (value: string | null) => void;
@@ -48,6 +50,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     size,
     addAttributes,
     helperText,
+    disabled,
   } = field;
   const [error, setError] = useState<string | null>(null);
 
@@ -55,10 +58,17 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     const inputValue = event.target.value;
     onChange(inputValue);
 
-    if (validation?.pattern && !validation.pattern.test(inputValue)) {
-      setError(validation.errorMessage || 'Invalid input');
+    // Ensure the pattern is a RegExp
+    if (validation?.pattern) {
+      const pattern = new RegExp(validation.pattern); // Convert the string to a RegExp object
+
+      if (!pattern.test(inputValue)) {
+        setError(validation.errorMessage || 'Invalid input');
+      } else {
+        setError(null);
+      }
     } else {
-      setError(null);
+      setError(null); // If no validation pattern exists, clear the error
     }
   };
 
@@ -99,6 +109,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         id={name}
         name={name}
         required={required}
+        disabled={disabled}
         placeholder={placeholder}
         value={value || ''}
         onChange={handleChange}
@@ -121,7 +132,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           '& .MuiFormHelperText-root': { fontSize: '10px', margin: '0px' },
         }}
       />
-      {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>}
+      {/* {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>} */}
+      <ErrorTooltip error={error} />
     </FormControl>
   );
 };

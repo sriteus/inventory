@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, FormControl, FormHelperText } from '@mui/material';
 import HelperTooltip from './HelperToolTip';
+import ErrorTooltip from './ErrorTooltip';
 
 interface CustomNumberFieldProps {
   field: {
@@ -17,6 +18,7 @@ interface CustomNumberFieldProps {
     };
     addAttributes?: Record<string, any>;
     helperText?: string;
+    disabled?: any;
   };
   value: string;
   onChange: (value: string) => void;
@@ -46,6 +48,7 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
     size,
     addAttributes,
     helperText,
+    disabled,
   } = field;
   const [error, setError] = useState<string | null>(null);
 
@@ -53,10 +56,17 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
     const inputValue = event.target.value;
     onChange(inputValue);
 
-    if (validation?.pattern && !validation.pattern.test(inputValue)) {
-      setError(validation.errorMessage || 'Invalid number');
+    // Ensure the pattern is a RegExp
+    if (validation?.pattern) {
+      const pattern = new RegExp(validation.pattern); // Convert the string to a RegExp object
+
+      if (!pattern.test(inputValue)) {
+        setError(validation.errorMessage || 'Invalid input');
+      } else {
+        setError(null);
+      }
     } else {
-      setError(null);
+      setError(null); // If no validation pattern exists, clear the error
     }
   };
 
@@ -100,6 +110,7 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
         onChange={handleChange}
         placeholder={placeholder}
         required={required}
+        disabled={disabled}
         {...addAttributes}
         fullWidth={fullWidth}
         size={size}
@@ -115,7 +126,8 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
         onBlur={handleBlur}
         onFocus={handleFocus}
       />
-      {error && <FormHelperText sx={{ margin: '0px', fontSize: '12px' }}>{error}</FormHelperText>}
+      {/* {error && <FormHelperText sx={{ margin: '0px', fontSize: '12px' }}>{error}</FormHelperText>} */}
+      <ErrorTooltip error={error} />
     </FormControl>
   );
 };

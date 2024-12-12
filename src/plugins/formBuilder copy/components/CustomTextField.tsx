@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { TextField, FormControl, FormHelperText } from '@mui/material';
 
 import HelperTooltip from './HelperToolTip';
+import ErrorTooltip from './ErrorTooltip';
 
 interface CustomTextFieldProps {
   field: {
@@ -19,6 +20,7 @@ interface CustomTextFieldProps {
     size?: 'small' | 'medium';
     addAttributes?: Record<string, any>;
     helperText?: string; // Add helperText field
+    disabled?: boolean;
   };
   value: string;
   onChange: (value: string) => void;
@@ -48,17 +50,24 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
     size,
     addAttributes,
     helperText, // Get helperText
+    disabled,
   } = field;
   const [error, setError] = useState<string | null>(null);
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
     onChange(inputValue);
 
-    if (validation?.pattern && !validation.pattern.test(inputValue)) {
-      setError(validation.errorMessage || 'Invalid input');
+    // Ensure the pattern is a RegExp
+    if (validation?.pattern) {
+      const pattern = new RegExp(validation.pattern); // Convert the string to a RegExp object
+
+      if (!pattern.test(inputValue)) {
+        setError(validation.errorMessage || 'Invalid input');
+      } else {
+        setError(null);
+      }
     } else {
-      setError(null);
+      setError(null); // If no validation pattern exists, clear the error
     }
   };
 
@@ -85,7 +94,6 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       onFocus(event);
     }
   };
-
   return (
     <FormControl fullWidth={fullWidth} style={style} error={!!error}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
@@ -100,6 +108,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
         name={name}
         placeholder={placeholder}
         required={required}
+        disabled={disabled}
         value={value || ''}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -119,7 +128,10 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
           },
         }}
       />
-      {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>}
+
+      {/* {error && <FormHelperText sx={{ margin: '0px', fontSize: '10px' }}>{error}</FormHelperText>}
+       */}
+      <ErrorTooltip error={error} />
     </FormControl>
   );
 };

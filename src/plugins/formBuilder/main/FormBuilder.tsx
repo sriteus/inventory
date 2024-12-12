@@ -10,6 +10,8 @@ import CustomDatePicker from '../components/CustomDatePicker';
 import CustomNumberField from '../components/CustomNumberField';
 import CustomPassword from '../components/CustomPassword';
 import CustomTextArea from '../components/CustomTextArea';
+import { fetchFormDetails } from '../api/fetchFormDetails';
+import { trimDateStrings } from '../formatters/dateTrimmer';
 
 interface ColumnConfig {
   formid: string;
@@ -86,6 +88,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     const onKeyUpCallbackRef = useRef<(fieldName: string, event: React.KeyboardEvent) => void>();
     const onBlurCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
     const onFocusCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
+    const [pkeysFilled, setPkeysFilled] = useState(false);
 
     useEffect(() => {
       if (initialData) {
@@ -106,8 +109,14 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     };
 
     const handleChange = (name: string, value: any) => {
+      const column = sections
+        .flatMap((section: any) => section.columns)
+        .find((col: any) => col.field === name);
+
+      // Convert the value to a number if the field is a 'number' type
+      const parsedValue = column?.type === 'number' && value !== '' ? Number(value) : value;
       setFormData((prevData) => {
-        const updatedData = { ...prevData, [name]: value };
+        const updatedData = { ...prevData, [name]: parsedValue };
         if (onChangeCallbackRef.current) {
           onChangeCallbackRef.current(updatedData);
         }
@@ -115,7 +124,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       });
 
       if (customEvent) {
-        customEvent(name, value);
+        customEvent(name, parsedValue);
       }
     };
 
@@ -137,12 +146,51 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       }
     };
 
-    const handleBlur = (name: string, event: React.FocusEvent) => {
+    const handleBlur = async (name: string, event: React.FocusEvent) => {
       if (onBlurCallbackRef.current) {
         onBlurCallbackRef.current(name, event);
       }
       if (onBlur) {
         onBlur(name, event);
+      }
+      const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
+
+      const allPkeysFilled = pkeys.every((pkey: string | number) => {
+        const value = formData[pkey];
+        if (value === null || value === undefined) return false;
+        if (typeof value === 'string') return value.trim() !== '';
+        if (typeof value === 'number') return !isNaN(value);
+        if (Array.isArray(value)) return value.length > 0;
+        if (typeof value === 'object') return Object.keys(value).length > 0;
+        return true; // Fallback for other types
+      });
+      setPkeysFilled(allPkeysFilled);
+      if (allPkeysFilled) {
+        try {
+          // Build the initData object using the primary keys and their values from formData
+          const initData = pkeys.reduce((acc: Record<string, any>, key: string) => {
+            acc[key] = formData[key];
+            return acc;
+          }, {});
+          // Make the API call
+          const config = await fetchFormDetails({
+            action: 'get',
+            formId: 'items',
+            endpoint: 'formio',
+            initData: initData, // Include the primary keys and their values
+          });
+
+          const trimmedResponse = trimDateStrings(config);
+
+          // Set the trimmed response data to formData
+          setFormData((prevData) => ({
+            ...prevData,
+            ...trimmedResponse,
+          }));
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          // Optionally handle the error (e.g., show a notification to the user)
+        }
       }
     };
 
@@ -215,6 +263,8 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     const isFormValid = Object.values(formErrors).every((error) => error === null);
 
     const renderField = (column: ColumnConfig) => {
+      const isPkey = (config.pkeys || '').split(',').includes(column.field);
+      const isDisabled = isPkey ? pkeysFilled : !pkeysFilled;
       const commonProps = {
         field: {
           label: column.title, // Mapping column title to label
@@ -226,6 +276,8 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           helperText: column.hint, // If you have hints
           addAttributes: column.addattrs || {}, // Any additional attributes
           options: column.options, // Pass options from the column config
+          type: column.type,
+          disabled: isDisabled,
         },
         value: formData[column.field],
         onChange: (value: any) => handleFieldChange(column.field, value),
@@ -234,7 +286,6 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         onBlur: (event: React.FocusEvent) => handleBlur(column.field, event),
         onFocus: (event: React.FocusEvent) => handleFocus(column.field, event),
       };
-
       switch (column.component) {
         case 'reactselect':
           return <CustomSelect {...commonProps} />;

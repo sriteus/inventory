@@ -1,5 +1,4 @@
-/* eslint-disable arrow-body-style */
-/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable radix */
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 
 import { Box, Grid, Button } from '@mui/material';
@@ -9,36 +8,43 @@ import CustomTextField from '../components/CustomTextField';
 import CustomFileUpload from '../components/CustomFileUpload';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomNumberField from '../components/CustomNumberField';
+import CustomPassword from '../components/CustomPassword';
+import CustomTextArea from '../components/CustomTextArea';
+import { fetchFormDetails } from '../api/fetchFormDetails';
 
-// interface Option {
-//   label: string;
-//   value: string | number;
+interface ColumnConfig {
+  formid: string;
+  sectionid: string;
+  field: string;
+  title: string;
+  colsize: string;
+  type: string;
+  component: string;
+  required: number;
+  sortno: number;
+  active: number;
+  hint?: string;
+  placeholder?: string;
+  options?: any[];
+  defaultvalue?: any;
+  addattrs?: any;
+}
+
+// interface SectionConfig {
+//   formid: string;
+//   sectionid: string;
+//   title: string;
+//   columns: ColumnConfig[];
 // }
 
-interface ValidationRule {
-  pattern?: RegExp;
-  errorMessage?: string;
-}
-
-interface FieldConfig {
-  type: 'text' | 'select' | 'number' | 'file' | 'date';
-  label: string;
-  name: string;
-  required?: boolean;
-  fullWidth?: boolean;
-  style?: React.CSSProperties;
-  options?: [];
-  validation?: ValidationRule;
-  size?: 'small' | 'medium';
-  col?: number;
-  addAttributes?: Record<string, any>;
-  helperText?: string;
-}
+// interface NewFormConfig {
+//   formid: string;
+//   title: string;
+//   sections: SectionConfig[];
+// }
 
 interface FormBuilderProps {
-  config: {
-    fields: any[];
-  };
+  config: any;
   initialData?: Record<string, any>;
   customEvent?: (fieldName: string, fieldValue: any) => void;
   onKeyDown?: (fieldName: string, event: React.KeyboardEvent) => void;
@@ -48,7 +54,7 @@ interface FormBuilderProps {
 }
 
 export interface FormBuilderRef {
-  addField: (field: FieldConfig) => void;
+  addField: (field: ColumnConfig) => void;
   removeField: (fieldName: string) => void;
   getFormData: () => Record<string, any>;
   onChange: (callback: (data: Record<string, any>) => void) => void;
@@ -60,16 +66,21 @@ export interface FormBuilderRef {
 
 const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
   ({ config, initialData, customEvent, onKeyDown, onKeyUp, onBlur, onFocus }, ref) => {
-    const { fields } = config;
-    const [formData, setFormData] = useState<Record<string, any>>(() => {
-      return fields.reduce(
-        (acc, field) => {
-          acc[field.name] = initialData?.[field.name] || '';
+    // Default to an empty array if sections is undefined
+    const { sections = [] } = config;
+    console.log('FFFFFFF', config);
+
+    const [formData, setFormData] = useState<Record<string, any>>(() =>
+      (sections || []).reduce(
+        (acc: any, section: any) => {
+          section.columns.forEach((column: any) => {
+            acc[column.field] = initialData?.[column.field] || column.defaultvalue || '';
+          });
           return acc;
         },
         {} as Record<string, any>
-      );
-    });
+      )
+    );
 
     const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
     const onChangeCallbackRef = useRef<(data: Record<string, any>) => void>();
@@ -77,6 +88,14 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     const onKeyUpCallbackRef = useRef<(fieldName: string, event: React.KeyboardEvent) => void>();
     const onBlurCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
     const onFocusCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
+    const [pkeysFilled, setPkeysFilled] = useState(false);
+
+    // useEffect(() => {
+    //   const allPkeysFilled = (config.pkeys || [])
+    //     .split(',')
+    //     .every((pkey: string) => formData[pkey]?.trim() !== '');
+    //   setPkeysFilled(allPkeysFilled);
+    // }, [formData, config.pkeys]);
 
     useEffect(() => {
       if (initialData) {
@@ -95,9 +114,30 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         onFocus(name, event);
       }
     };
+
+    // const handleChange = (name: string, value: any) => {
+    //   setFormData((prevData) => {
+    //     const updatedData = { ...prevData, [name]: value };
+    //     if (onChangeCallbackRef.current) {
+    //       onChangeCallbackRef.current(updatedData);
+    //     }
+    //     return updatedData;
+    //   });
+
+    //   if (customEvent) {
+    //     customEvent(name, value);
+    //   }
+    // };
     const handleChange = (name: string, value: any) => {
+      const column = sections
+        .flatMap((section: any) => section.columns)
+        .find((col: any) => col.field === name);
+
+      // Convert the value to a number if the field is a 'number' type
+      const parsedValue = column?.type === 'number' && value !== '' ? Number(value) : value;
+      console.log(typeof parsedValue);
       setFormData((prevData) => {
-        const updatedData = { ...prevData, [name]: value };
+        const updatedData = { ...prevData, [name]: parsedValue };
         if (onChangeCallbackRef.current) {
           onChangeCallbackRef.current(updatedData);
         }
@@ -105,7 +145,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       });
 
       if (customEvent) {
-        customEvent(name, value);
+        customEvent(name, parsedValue);
       }
     };
 
@@ -127,51 +167,109 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       }
     };
 
-    const handleBlur = (name: string, event: React.FocusEvent) => {
+    const handleBlur = async (name: string, event: React.FocusEvent) => {
+      // Trigger callbacks if defined
       if (onBlurCallbackRef.current) {
         onBlurCallbackRef.current(name, event);
       }
       if (onBlur) {
         onBlur(name, event);
       }
+
+      // Extract primary keys from the config
+      const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
+
+      // Perform validation to ensure all primary keys are filled
+      const allPkeysFilled = pkeys.every((pkey: string | number) => {
+        const value = formData[pkey];
+        // Check for non-empty values based on type
+        if (value === null || value === undefined) return false;
+        if (typeof value === 'string') return value.trim() !== '';
+        if (typeof value === 'number') return !isNaN(value);
+        if (Array.isArray(value)) return value.length > 0;
+        if (typeof value === 'object') return Object.keys(value).length > 0;
+        return true; // Fallback for other types
+      });
+      setPkeysFilled(allPkeysFilled);
+      // If all pkeys are filled, make the API request
+      if (allPkeysFilled) {
+        try {
+          // Build the initData object using the primary keys and their values from formData
+          const initData = pkeys.reduce((acc: Record<string, any>, key: string) => {
+            acc[key] = formData[key];
+            return acc;
+          }, {});
+          // Make the API call
+          const config = await fetchFormDetails({
+            action: 'get',
+            formId: 'items',
+            endpoint: 'formio',
+            initData: initData, // Include the primary keys and their values
+          });
+
+          setFormData((prevData) => ({
+            ...prevData,
+            ...config,
+          }));
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          // Optionally handle the error (e.g., show a notification to the user)
+        }
+      }
     };
 
-    const validateField = (field: FieldConfig, value: any): string | null => {
-      if (field.required && !value) {
-        return `${field.label} is required`;
-      }
-      if (field.validation?.pattern && !field.validation.pattern.test(value)) {
-        return field.validation.errorMessage || 'Invalid input';
+    const validateField = (column: ColumnConfig, value: any): string | null => {
+      if (column.required && !value) {
+        return `${column.title} is required`;
       }
       return null;
     };
 
+    /*************  ✨ Codeium Command ⭐  *************/
+    /**
+     * Handles a change in a form field value.
+     * @param {string} name - The name of the field
+     * @param {any} value - The new value of the field
+     */
+    /******  8a48f662-35a9-4254-83cf-6ac98662042f  *******/
     const handleFieldChange = (name: string, value: any) => {
       handleChange(name, value);
-      const field = fields.find((field) => field.name === name);
-      const error = field ? validateField(field, value) : null;
+      const section = sections.find((sec: any) =>
+        sec.columns.some((col: any) => col.field === name)
+      );
+      const column = section?.columns.find((col: any) => col.field === name);
+      const error = column ? validateField(column, value) : null;
       setFormErrors((prevErrors) => ({
         ...prevErrors,
         [name]: error,
       }));
+      // const allPkeysFilled = (config.pkeys || [])
+      //   .split(',')
+      //   .every((pkey: string) => formData[pkey]?.trim() !== '');
+      // setPkeysFilled(allPkeysFilled);
     };
 
-    const addField = (newField: FieldConfig) => {
-      if (!fields.some((field) => field.name === newField.name)) {
-        config.fields.push(newField);
+    const addField = (newField: ColumnConfig) => {
+      const section = sections.find((sec: any) => sec.sectionid === newField.sectionid);
+      if (section && !section.columns.some((col: any) => col.field === newField.field)) {
+        section.columns.push(newField);
         setFormData((prevData) => ({
           ...prevData,
-          [newField.name]: '',
+          [newField.field]: newField.defaultvalue || '',
         }));
       }
     };
 
     const removeField = (fieldName: string) => {
-      const updatedFields = config.fields.filter((field) => field.name !== fieldName);
-      const updatedFormData = { ...formData };
-      delete updatedFormData[fieldName];
-      config.fields = updatedFields;
-      setFormData(updatedFormData);
+      const section = sections.find((sec: any) =>
+        sec.columns.some((col: any) => col.field === fieldName)
+      );
+      if (section) {
+        section.columns = section.columns.filter((col: any) => col.field !== fieldName);
+        const updatedFormData = { ...formData };
+        delete updatedFormData[fieldName];
+        setFormData(updatedFormData);
+      }
     };
 
     const getFormData = () => formData;
@@ -199,47 +297,113 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
 
     const isFormValid = Object.values(formErrors).every((error) => error === null);
 
-    const renderField = (field: FieldConfig) => {
+    const renderField = (column: ColumnConfig) => {
+      const isPkey = (config.pkeys || '').split(',').includes(column.field);
+      const isDisabled = isPkey ? pkeysFilled : !pkeysFilled;
       const commonProps = {
-        field,
-        value: formData[field.name],
-        onChange: (value: any) => handleFieldChange(field.name, value),
-        onKeyDown: (event: React.KeyboardEvent) => handleKeyDown(field.name, event),
-        onKeyUp: (event: React.KeyboardEvent) => handleKeyUp(field.name, event),
-        onBlur: (event: React.FocusEvent) => handleBlur(field.name, event),
-        onFocus: (event: React.FocusEvent) => handleFocus(field.name, event),
+        field: {
+          label: column.title, // Mapping column title to label
+          name: column.field, // Mapping column field to name
+          placeholder: column.placeholder || '', // Optional placeholder
+          required: column.required === 1, // Assuming '1' means required
+          fullWidth: true, // You can make this configurable
+          validation: column.addattrs?.validation || {}, // Optional validation
+          helperText: column.hint, // If you have hints
+          addAttributes: column.addattrs || {}, // Any additional attributes
+          options: column.options, // Pass options from the column config
+          type: column.type,
+          disabled: isDisabled,
+        },
+        value: formData[column.field],
+        onChange: (value: any) => handleFieldChange(column.field, value),
+        onKeyDown: (event: React.KeyboardEvent) => handleKeyDown(column.field, event),
+        onKeyUp: (event: React.KeyboardEvent) => handleKeyUp(column.field, event),
+        onBlur: (event: React.FocusEvent) => handleBlur(column.field, event),
+        onFocus: (event: React.FocusEvent) => handleFocus(column.field, event),
       };
-
-      switch (field.type) {
-        case 'text':
-          return <CustomTextField key={field.name} {...commonProps} />;
-        case 'date':
-          return <CustomDatePicker key={field.name} {...commonProps} />;
-        case 'file':
-          return <CustomFileUpload key={field.name} {...commonProps} />;
-        case 'select':
-          return <CustomSelect key={field.name} {...commonProps} />;
+      switch (column.component) {
+        case 'reactselect':
+          return <CustomSelect {...commonProps} />;
+        case 'textarea':
+          return <CustomTextArea {...commonProps} />;
+        case 'textfield':
+          return <CustomTextField {...commonProps} />;
+        case 'fileupload':
+        case 'image':
+          return <CustomFileUpload {...commonProps} />;
+        case 'datepicker':
+          return <CustomDatePicker {...commonProps} />;
         case 'number':
-          return <CustomNumberField key={field.name} {...commonProps} />;
+          return <CustomNumberField {...commonProps} />;
+        case 'checkpassword':
+          return <CustomPassword {...commonProps} />;
         default:
-          return null;
+          return <CustomTextField {...commonProps} />;
       }
     };
 
     return (
-      <Box component="form" noValidate autoComplete="off">
-        <Grid container spacing={2}>
-          {fields.map((field) => (
-            <Grid item xs={field.col || 12} key={field.name}>
-              {renderField(field)}
-            </Grid>
-          ))}
-        </Grid>
+      <Box
+        component="form"
+        noValidate
+        autoComplete="off"
+        sx={{
+          border: '2px solid #ccc',
+          borderRadius: '8px',
+          padding: 1,
+        }}
+      >
+        {sections.length > 0 ? (
+          sections.map((section: any) => (
+            <Box
+              key={section.sectionid}
+              sx={{
+                padding: 1, // Reduced padding
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                marginBottom: 1, // Reduced bottom margin
+              }}
+            >
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  marginBottom: -3, // Minimal gap between title and content
+                  marginTop: -2,
+                }}
+              >
+                <h2>{section.title}</h2>
+              </Box>
+              <Grid container spacing={1}>
+                {' '}
+                {/* Reduced grid spacing further */}
+                {section.columns.map((column: any) => (
+                  <Grid
+                    item
+                    xs={12}
+                    sm={column.colsize ? parseInt(column.colsize.replace('col-', '')) : 12}
+                    key={column.field}
+                    sx={{ py: 0.5 }} // Reduced vertical padding in grid items
+                  >
+                    {renderField(column)}
+                    {formErrors[column.field] && (
+                      <Box sx={{ color: 'red', fontSize: '0.75rem', mt: 0.25 }}>
+                        {formErrors[column.field]}
+                      </Box>
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          ))
+        ) : (
+          <Box>No sections available.</Box>
+        )}
         <Button
           variant="contained"
           color="primary"
           onClick={() => console.log('Saved Form Data:', formData)}
-          sx={{ mt: 2 }}
+          sx={{ mt: 1 }} // Reduced top margin
           disabled={!isFormValid}
         >
           Save

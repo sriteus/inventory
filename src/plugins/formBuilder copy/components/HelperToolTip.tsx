@@ -10,10 +10,10 @@ const HelperTooltip: React.FC<HelperTooltipProps> = ({ helperText }) => (
     <IconButton
       size="small"
       sx={{
-        padding: '4px',
+        padding: '2px',
         marginLeft: '4px',
-        width: '24px',
-        height: '24px',
+        width: '15px',
+        height: '15px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

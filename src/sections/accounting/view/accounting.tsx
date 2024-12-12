@@ -1,20 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { FormBuilderRef } from 'src/plugins/formBuilder/main/FormBuilder';
 
-import { useRef, useEffect, useState } from 'react';
-import axios from 'axios';
+import { useRef, useState, useEffect } from 'react';
 
 import { Button, Typography } from '@mui/material';
 
 import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
-
-import { jsonTest } from './test';
+import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
 
 const Accounting = () => {
   const formRef = useRef<FormBuilderRef>(null);
-  const [formConfig, setFormConfig] = useState(null); // State to hold form configuration
+  const [formDetails, setFormDetails] = useState(null); // State to hold form configuration
   const [loading, setLoading] = useState(true); // State to manage loading
 
   const handleOnChange = (data: Record<string, any>) => {
@@ -69,33 +67,22 @@ const Accounting = () => {
 
   // Fetch form configuration from the API
   useEffect(() => {
-    const fetchFormConfig = async () => {
+    const loadFormConfig = async () => {
       try {
-        const response = await axios.post(
-          'http://localhost:8003/api/formio',
-          {
-            action: 'schema',
-            formId: 'parentalinfo',
-            data: {},
-            initData: {},
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization:
-                'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWdpc3RyYXRpb25pZCI6IjMiLCJlbWFpbCI6Im9yYUB1cHNjLmluIiwibmFtZSI6Ik9SQSBNYWluIiwiaWF0IjoxNzMyNjk5OTI1LCJleHAiOjE3MzMyOTk5MjV9.qsZeal3xWdm2bcpZ_O85w-H0L6x4JhHvTQZgx3OwV5w',
-            },
-          }
-        );
-        setFormConfig(response.data.data[0]); // Set the fetched form configuration
+        const config = await fetchFormDetails({
+          formId: 'items',
+          endpoint: 'formio',
+          action: 'schema',
+        });
+        setFormDetails(config);
       } catch (error) {
-        console.error('Error fetching form configuration:', error);
+        console.error('Failed to load form configuration:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFormConfig();
+    loadFormConfig();
   }, []);
 
   // Register event handlers once `formRef.current` is set
@@ -108,17 +95,7 @@ const Accounting = () => {
       formRef.current.onFocus(handleFocus);
       console.log('All event handlers registered');
     }
-
-    // return () => {
-    //   if (formRef.current) {
-    //     formRef.current.onChange(null);
-    //     formRef.current.onKeyDown(null);
-    //     formRef.current.onKeyUp(null);
-    //     formRef.current.onBlur(null);
-    //     formRef.current.onFocus(null);
-    //   }
-    // };
-  }, [formRef.current]);
+  }, [loading]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -130,12 +107,9 @@ const Accounting = () => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Accounting Form
         </Typography>
-        <div style={{ width: '70%', marginBottom: '30px' }}>
-          {formConfig && (
-            <FormBuilder ref={formRef} config={formConfig} initialData={initialData} />
-          )}
+        <div style={{ width: '60%', marginBottom: '30px' }}>
+          {formDetails && <FormBuilder ref={formRef} config={formDetails} />}
         </div>
-
         <div style={{ width: '50%', display: 'flex', flexDirection: 'row', gap: '10px' }}>
           <Adaz />
         </div>

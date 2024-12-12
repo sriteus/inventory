@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, FormControl } from '@mui/material';
 import HelperTooltip from './HelperToolTip';
+import ErrorTooltip from './ErrorTooltip';
 
 interface CustomFileUploadProps {
   field: {
@@ -17,6 +18,7 @@ interface CustomFileUploadProps {
     size?: 'small' | 'medium';
     addAttributes?: Record<string, any>;
     helperText?: string;
+    disabled?: any;
   };
   value: File | null;
   onChange: (value: File | null) => void;
@@ -97,7 +99,7 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
         {helperText && <HelperTooltip helperText={helperText} />}
       </div>
 
-      <Button variant="outlined" component="label" size={size} fullWidth>
+      <Button variant="outlined" component="label" size={size} fullWidth disabled={field.disabled}>
         Upload File
         <input
           id={name}
@@ -117,11 +119,12 @@ const CustomFileUpload: React.FC<CustomFileUploadProps> = ({
           {value.name}
         </Typography>
       )}
-      {error && (
+      {/* {error && (
         <Typography variant="body2" color="error" sx={{ mt: 1 }}>
           {error}
-        </Typography>
-      )}
+        </Typography> */}
+      {/* )} */}
+      <ErrorTooltip error={error} />
     </FormControl>
   );
 };
