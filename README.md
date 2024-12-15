@@ -18,6 +18,7 @@ The **Form Builder Plugin** is a React-based dynamic form creation utility. It a
 6. [Event Handling](#event-handling)
 7. [Validation and Error Handling](#validation-and-error-handling)
 8. [Sample Project Structure](#sample-project-structure)
+9. [Fetching Form Configuration](#fetching-form-configuration)
 
 ---
 
@@ -255,4 +256,55 @@ src/
 |
 |-- pages/
 |   |-- MyFormPage.tsx
+```
+
+---
+
+## Fetching Form Configuration
+
+Add the following utility to fetch form configuration details dynamically:
+
+```typescript
+// src/utils/fetchFormConfig.ts
+import axios from 'axios';
+
+const token = import.meta.env.VITE_AUTH_TOKEN;
+
+export interface FetchFormConfigParams {
+  formId: string;
+  endpoint: string;
+  action: string;
+  data?: Record<string, any>;
+  initData?: Record<string, any>;
+}
+
+export const fetchFormDetails = async ({
+  formId,
+  endpoint,
+  action,
+  data = {},
+  initData = {},
+}: FetchFormConfigParams) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8003/api/${endpoint}`,
+      {
+        action,
+        formId,
+        data,
+        initData,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data.data[0];
+  } catch (error) {
+    console.error(`Error fetching form configuration for formId ${formId}:`, error);
+    throw error;
+  }
+};
 ```
