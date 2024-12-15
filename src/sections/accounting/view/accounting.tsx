@@ -9,6 +9,7 @@ import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
 import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
+
 import Personal from './personal';
 
 const Accounting = () => {
