@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { FormBuilderRef } from 'src/plugins/formBuilder/main/FormBuilder';
 
@@ -9,9 +10,8 @@ import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
 import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
-import Personal from './personal';
 
-const Accounting = () => {
+const Personal = () => {
   const formRef = useRef<FormBuilderRef>(null);
   const [formDetails, setFormDetails] = useState(null); // State to hold form configuration
   const [loading, setLoading] = useState(true); // State to manage loading
@@ -44,13 +44,13 @@ const Accounting = () => {
   };
 
   const handleBlur = (fieldName: string, event: any) => {
-    // console.log('Accounting Blur:', {
-    //   fieldName,
-    //   value: event.target.value,
-    //   timestamp: new Date().toISOString(),
-    // });
+    if (fieldName === 'person_age') {
+      const age = parseInt(event.target.value, 10);
+      if (!isNaN(age) && age < 18) {
+        alert('Age must be greater than or equal to 18.');
+      }
+    }
   };
-
   const handleAddField = (newField: any) => {
     formRef.current?.addField(newField);
   };
@@ -59,19 +59,12 @@ const Accounting = () => {
     formRef.current?.removeField(fieldName);
   };
 
-  const initialData = {
-    name: 'Sartha',
-    lastName: 'Doe',
-    schoolName: 'ABC School',
-    collegeName: 'XYZ College',
-  };
-
   // Fetch form configuration from the API
   useEffect(() => {
     const loadFormConfig = async () => {
       try {
         const config = await fetchFormDetails({
-          formId: 'items',
+          formId: 'per_details',
           endpoint: 'formio',
           action: 'schema',
         });
@@ -104,21 +97,14 @@ const Accounting = () => {
 
   return (
     <div>
-      <DashboardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Accounting Form
-        </Typography>
-        <div style={{ width: '60%', marginBottom: '30px' }}>
-          {formDetails && <FormBuilder ref={formRef} config={formDetails} />}
-        </div>
-        <Personal />
-        <div style={{ width: '50%', display: 'flex', flexDirection: 'row', gap: '10px' }}>
-          <Adaz />
-        </div>
-        <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
-      </DashboardContent>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Accounting Form
+      </Typography>
+      <div style={{ width: '40%', marginBottom: '30px' }}>
+        {formDetails && <FormBuilder ref={formRef} config={formDetails} />}
+      </div>
     </div>
   );
 };
 
-export default Accounting;
+export default Personal;

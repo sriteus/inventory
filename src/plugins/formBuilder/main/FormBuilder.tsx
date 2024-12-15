@@ -12,6 +12,7 @@ import CustomPassword from '../components/CustomPassword';
 import CustomTextArea from '../components/CustomTextArea';
 import { fetchFormDetails } from '../api/fetchFormDetails';
 import { trimDateStrings } from '../formatters/dateTrimmer';
+import { LoadingButton } from '@mui/lab';
 
 interface ColumnConfig {
   formid: string;
@@ -68,6 +69,7 @@ export interface FormBuilderRef {
 const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
   ({ config, initialData, customEvent, onKeyDown, onKeyUp, onBlur, onFocus }, ref) => {
     // Default to an empty array if sections is undefined
+    const formId = config.formid;
     const { sections = [] } = config;
 
     const [formData, setFormData] = useState<Record<string, any>>(() =>
@@ -89,6 +91,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     const onBlurCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
     const onFocusCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
     const [pkeysFilled, setPkeysFilled] = useState(false);
+    const [formMode, setFormMode] = useState('create');
 
     useEffect(() => {
       if (initialData) {
@@ -153,43 +156,52 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       if (onBlur) {
         onBlur(name, event);
       }
-      const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
+      if (formMode !== 'edit') {
+        const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
 
-      const allPkeysFilled = pkeys.every((pkey: string | number) => {
-        const value = formData[pkey];
-        if (value === null || value === undefined) return false;
-        if (typeof value === 'string') return value.trim() !== '';
-        if (typeof value === 'number') return !isNaN(value);
-        if (Array.isArray(value)) return value.length > 0;
-        if (typeof value === 'object') return Object.keys(value).length > 0;
-        return true; // Fallback for other types
-      });
-      setPkeysFilled(allPkeysFilled);
-      if (allPkeysFilled) {
-        try {
-          // Build the initData object using the primary keys and their values from formData
-          const initData = pkeys.reduce((acc: Record<string, any>, key: string) => {
-            acc[key] = formData[key];
-            return acc;
-          }, {});
-          // Make the API call
-          const config = await fetchFormDetails({
-            action: 'get',
-            formId: 'items',
-            endpoint: 'formio',
-            initData: initData, // Include the primary keys and their values
-          });
+        const allPkeysFilled = pkeys.every((pkey: string | number) => {
+          const value = formData[pkey];
+          if (value === null || value === undefined) return false;
+          if (typeof value === 'string') return value.trim() !== '';
+          if (typeof value === 'number') return !isNaN(value);
+          if (Array.isArray(value)) return value.length > 0;
+          if (typeof value === 'object') return Object.keys(value).length > 0;
+          return true; // Fallback for other types
+        });
+        setPkeysFilled(allPkeysFilled);
+        if (allPkeysFilled) {
+          try {
+            // Build the initData object using the primary keys and their values from formData
+            const initData = pkeys.reduce((acc: Record<string, any>, key: string) => {
+              acc[key] = formData[key];
+              return acc;
+            }, {});
+            // Make the API call
+            const config = await fetchFormDetails({
+              action: 'get',
+              formId: formId,
+              endpoint: 'formio',
+              initData: initData, // Include the primary keys and their values
+            });
 
-          const trimmedResponse = trimDateStrings(config);
+            const trimmedResponse = trimDateStrings(config);
 
-          // Set the trimmed response data to formData
-          setFormData((prevData) => ({
-            ...prevData,
-            ...trimmedResponse,
-          }));
-        } catch (error) {
-          console.error('Error fetching data:', error);
-          // Optionally handle the error (e.g., show a notification to the user)
+            // Set the trimmed response data to formData
+
+            if (config !== undefined) {
+              setFormMode('edit');
+              setFormData((prevData) => ({
+                ...prevData,
+                ...trimmedResponse,
+              }));
+            } else {
+              setFormMode('create');
+            }
+            console.log('IaMMM', config);
+          } catch (error) {
+            console.error('Error fetching data:', error);
+            // Optionally handle the error (e.g., show a notification to the user)
+          }
         }
       }
     };
@@ -208,6 +220,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       );
       const column = section?.columns.find((col: any) => col.field === name);
       const error = column ? validateField(column, value) : null;
+
       setFormErrors((prevErrors) => ({
         ...prevErrors,
         [name]: error,
@@ -260,11 +273,27 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       },
     }));
 
-    const isFormValid = Object.values(formErrors).every((error) => error === null);
-
+    // const isFormValid = pkeysFilled && Object.values(formErrors).every((error) => error === null);
+    const isFormValid = sections
+      .flatMap((section: any) => section.columns)
+      .filter((column: any) => column.required === 1) // Check for required fields
+      .every((column: any) => {
+        const value = formData[column.field];
+        return (
+          value !== null &&
+          value !== undefined &&
+          (typeof value !== 'string' || value.trim() !== '') && // Check non-empty for strings
+          (typeof value !== 'number' || !isNaN(value)) && // Check valid number
+          (!Array.isArray(value) || value.length > 0) && // Check non-empty array
+          (typeof value !== 'object' || Object.keys(value).length > 0) // Check non-empty object
+        );
+      });
     const renderField = (column: ColumnConfig) => {
       const isPkey = (config.pkeys || '').split(',').includes(column.field);
-      const isDisabled = isPkey ? pkeysFilled : !pkeysFilled;
+
+      // Disable pkeys if formMode is 'edit', otherwise allow interaction
+      // const isDisabled = formMode === 'edit' && isPkey;
+      const isDisabled = isPkey ? formMode === 'edit' && isPkey : !pkeysFilled;
       const commonProps = {
         field: {
           label: column.title, // Mapping column title to label
@@ -306,7 +335,101 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           return <CustomTextField {...commonProps} />;
       }
     };
+    const resetForm = () => {
+      setFormData(() =>
+        (sections || []).reduce(
+          (acc: any, section: any) => {
+            section.columns.forEach((column: any) => {
+              acc[column.field] = initialData?.[column.field] || column.defaultvalue || '';
+            });
+            return acc;
+          },
+          {} as Record<string, any>
+        )
+      );
+      setFormMode('create');
+    };
+    const handleSubmit = async () => {
+      try {
+        // Extract primary key values from formData
+        const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
+        const initData = pkeys.reduce((acc: Record<string, any>, key: string) => {
+          acc[key] = formData[key];
+          return acc;
+        }, {});
 
+        // Filter out empty fields from the data
+        const data = Object.keys(formData).reduce((acc: Record<string, any>, key: string) => {
+          if (!pkeys.includes(key) && formData[key] !== '') {
+            acc[key] = formData[key];
+          }
+          return acc;
+        }, {});
+
+        // API call payload
+        const payload = {
+          action: 'upsert',
+          initvalues: initData,
+          data,
+        };
+
+        console.log('Submitting payload:', payload);
+        // Perform the API call
+        const response = await fetchFormDetails({
+          action: 'upsert',
+          formId: formId,
+          endpoint: 'formio',
+          initData,
+          data,
+        });
+
+        // Handle success response
+        console.log('Save successful:', response);
+        alert('Form saved successfully!');
+        resetForm();
+      } catch (error) {
+        // Handle error response
+        console.error('Error during save:', error);
+        alert('An error occurred while saving the form.');
+      }
+    };
+
+    const handleDelete = async () => {
+      // Ask for user confirmation before proceeding with deletion
+      const isConfirmed = window.confirm(
+        'Are you sure you want to delete this form? This action cannot be undone.'
+      );
+
+      if (!isConfirmed) {
+        return;
+      }
+      try {
+        const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
+        const initData = pkeys.reduce((acc: Record<string, any>, key: string) => {
+          acc[key] = formData[key];
+          return acc;
+        }, {});
+
+        const response = await fetchFormDetails({
+          action: 'del',
+          formId: formId,
+          endpoint: 'formio',
+          initData,
+        });
+
+        console.log('Delete successful:', response);
+        alert('Form Deleted Successfully!');
+        resetForm();
+      } catch (error) {
+        console.error('Error during Delete:', error);
+        alert('An error occurred while deleting the form.');
+      }
+    };
+
+    const handleReset = () => {
+      resetForm();
+      setFormMode('create');
+    };
     return (
       <Box
         component="form"
@@ -364,15 +487,37 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         ) : (
           <Box>No sections available.</Box>
         )}
-        <Button
+        <LoadingButton
           variant="contained"
-          color="primary"
-          onClick={() => console.log('Saved Form Data:', formData)}
+          onClick={handleSubmit}
           sx={{ mt: 1 }} // Reduced top margin
-          disabled={!isFormValid}
+          disabled={!isFormValid} // Disabled unless pkeys are filled and all fields are valid
         >
           Save
-        </Button>
+        </LoadingButton>
+
+        {formMode === 'edit' && (
+          <>
+            <LoadingButton
+              variant="contained"
+              color="error"
+              onClick={handleDelete}
+              sx={{ mt: 1, ml: 1 }} // Reduced top margin
+              disabled={!isFormValid}
+            >
+              Delete
+            </LoadingButton>
+            <LoadingButton
+              variant="contained"
+              color="inherit"
+              onClick={handleReset}
+              sx={{ mt: 1, ml: 1 }} // Reduced top margin
+              disabled={!isFormValid}
+            >
+              Reset
+            </LoadingButton>
+          </>
+        )}
       </Box>
     );
   }
