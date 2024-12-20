@@ -17,6 +17,7 @@ const ErrorTooltip: React.FC<ErrorTooltipProps> = ({ error }) => {
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
+          color: 'red',
         }}
       >
         {error}

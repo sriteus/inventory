@@ -8,7 +8,12 @@ import { Button, Typography } from '@mui/material';
 import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
 import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
+import TableBuilder from 'src/plugins/formBuilder/main/TableBuilder';
 import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
+
+import Personal from './personal';
+import PersonalTable from './PersonalTable';
+import ItemsForm from './items';
 
 const Accounting = () => {
   const formRef = useRef<FormBuilderRef>(null);
@@ -20,11 +25,11 @@ const Accounting = () => {
   };
 
   const handleFocus = (fieldName: string, event: any) => {
-    console.log('Accounting Focus:', {
-      fieldName,
-      value: event.target.value,
-      timestamp: new Date().toISOString(),
-    });
+    // console.log('Accounting Focus:', {
+    //   fieldName,
+    //   value: event.target.value,
+    //   timestamp: new Date().toISOString(),
+    // });
   };
 
   const handleKeyDown = (fieldName: string, event: any) => {
@@ -70,7 +75,7 @@ const Accounting = () => {
     const loadFormConfig = async () => {
       try {
         const config = await fetchFormDetails({
-          formId: 'parentalinfo',
+          formId: 'items',
           endpoint: 'formio',
           action: 'schema',
         });
@@ -95,7 +100,7 @@ const Accounting = () => {
       formRef.current.onFocus(handleFocus);
       console.log('All event handlers registered');
     }
-  }, [formRef.current]);
+  }, [loading]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -107,11 +112,10 @@ const Accounting = () => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Accounting Form
         </Typography>
-        <div style={{ width: '60%', marginBottom: '30px' }}>
-          {formDetails && <FormBuilder ref={formRef} config={formDetails} />}
-        </div>
-        <div style={{ width: '50%', display: 'flex', flexDirection: 'row', gap: '10px' }}>
-          <Adaz />
+        <div style={{ width: '100%', marginBottom: '30px' }}>
+          <TableBuilder formId="items" typer="just_form" DetailsComponent={ItemsForm} />
+          <TableBuilder formId="per_details" typer="table_with_form" DetailsComponent={Personal} />
+          <TableBuilder formId="per_details" typer="just_the_table" />
         </div>
         <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
       </DashboardContent>

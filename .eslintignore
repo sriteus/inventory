@@ -37,4 +37,6 @@ public/*
 # **/src
 **/src/plugins/muigrid/TestGrid.tsx
 **/src/plugins
+**/src/sections/accounting/view/
+**/src/plugins/formBuilder/main/TableBuilder.tsx
 

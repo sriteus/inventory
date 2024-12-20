@@ -13,6 +13,7 @@ import CustomTextArea from '../components/CustomTextArea';
 import { fetchFormDetails } from '../api/fetchFormDetails';
 import { trimDateStrings } from '../formatters/dateTrimmer';
 import { LoadingButton } from '@mui/lab';
+import ErrorTooltip from '../components/ErrorTooltip';
 
 interface ColumnConfig {
   formid: string;
@@ -64,6 +65,8 @@ export interface FormBuilderRef {
   onKeyUp: (callback: (fieldName: string, event: React.KeyboardEvent) => void) => void;
   onBlur: (callback: (fieldName: string, event: React.FocusEvent) => void) => void;
   onFocus: (callback: (fieldName: string, event: React.FocusEvent) => void) => void;
+  setFormErrors: (errors: Record<string, string | null>) => void; // Add this method to set form errors
+  getFormErrors: () => any;
 }
 
 const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
@@ -92,15 +95,33 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     const onFocusCallbackRef = useRef<(fieldName: string, event: React.FocusEvent) => void>();
     const [pkeysFilled, setPkeysFilled] = useState(false);
     const [formMode, setFormMode] = useState('create');
-
     useEffect(() => {
       if (initialData) {
         setFormData((prevData) => ({
           ...prevData,
           ...initialData,
         }));
+        setPkeysFilled(true);
+        setFormMode('edit');
       }
     }, [initialData]);
+
+    const validateAllFields = (): boolean => {
+      const errors: Record<string, string | null> = {};
+
+      sections.forEach((section: any) => {
+        section.columns.forEach((column: ColumnConfig) => {
+          const value = formData[column.field];
+          const error = validateField(column, value); // Existing validation logic
+          if (error) {
+            errors[column.field] = error;
+          }
+        });
+      });
+
+      setFormErrors(errors);
+      return Object.values(errors).every((error) => error === null);
+    };
 
     const handleFocus = (name: string, event: React.FocusEvent) => {
       if (onFocusCallbackRef.current) {
@@ -197,7 +218,6 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
             } else {
               setFormMode('create');
             }
-            console.log('IaMMM', config);
           } catch (error) {
             console.error('Error fetching data:', error);
             // Optionally handle the error (e.g., show a notification to the user)
@@ -271,23 +291,27 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       onFocus: (callback: (fieldName: string, event: React.FocusEvent) => void) => {
         onFocusCallbackRef.current = callback;
       },
+      setFormErrors,
+      getFormErrors: () => formErrors,
     }));
 
     // const isFormValid = pkeysFilled && Object.values(formErrors).every((error) => error === null);
-    const isFormValid = sections
-      .flatMap((section: any) => section.columns)
-      .filter((column: any) => column.required === 1) // Check for required fields
-      .every((column: any) => {
-        const value = formData[column.field];
-        return (
-          value !== null &&
-          value !== undefined &&
-          (typeof value !== 'string' || value.trim() !== '') && // Check non-empty for strings
-          (typeof value !== 'number' || !isNaN(value)) && // Check valid number
-          (!Array.isArray(value) || value.length > 0) && // Check non-empty array
-          (typeof value !== 'object' || Object.keys(value).length > 0) // Check non-empty object
-        );
-      });
+    const isFormValid =
+      sections
+        .flatMap((section: any) => section.columns)
+        .filter((column: any) => column.required === 1) // Check for required fields
+        .every((column: any) => {
+          const value = formData[column.field];
+          return (
+            value !== null &&
+            value !== undefined &&
+            (typeof value !== 'string' || value.trim() !== '') && // Check non-empty for strings
+            (typeof value !== 'number' || !isNaN(value)) && // Check valid number
+            (!Array.isArray(value) || value.length > 0) && // Check non-empty array
+            (typeof value !== 'object' || Object.keys(value).length > 0) // Check non-empty object
+          );
+        }) && Object.values(formErrors).every((error) => error === null); // Make sure there are no errors
+
     const renderField = (column: ColumnConfig) => {
       const isPkey = (config.pkeys || '').split(',').includes(column.field);
 
@@ -350,6 +374,11 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       setFormMode('create');
     };
     const handleSubmit = async () => {
+      if (!validateAllFields()) {
+        alert('Please correct the errors before submitting.');
+        return;
+      }
+
       try {
         // Extract primary key values from formData
         const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
@@ -365,16 +394,6 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           }
           return acc;
         }, {});
-
-        // API call payload
-        const payload = {
-          action: 'upsert',
-          initvalues: initData,
-          data,
-        };
-
-        console.log('Submitting payload:', payload);
-        // Perform the API call
         const response = await fetchFormDetails({
           action: 'upsert',
           formId: formId,
@@ -387,6 +406,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         console.log('Save successful:', response);
         alert('Form saved successfully!');
         resetForm();
+        window.location.reload();
       } catch (error) {
         // Handle error response
         console.error('Error during save:', error);
@@ -474,11 +494,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
                     sx={{ py: 0.5 }} // Reduced vertical padding in grid items
                   >
                     {renderField(column)}
-                    {formErrors[column.field] && (
-                      <Box sx={{ color: 'red', fontSize: '0.75rem', mt: 0.25 }}>
-                        {formErrors[column.field]}
-                      </Box>
-                    )}
+                    {formErrors[column.field] && <ErrorTooltip error={formErrors[column.field]} />}
                   </Grid>
                 ))}
               </Grid>

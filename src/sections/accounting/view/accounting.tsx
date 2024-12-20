@@ -1,122 +1,94 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import type { FormBuilderRef } from 'src/plugins/formBuilder/main/FormBuilder';
+/* eslint-disable no-restricted-globals */
 
 import { useRef, useState, useEffect } from 'react';
-
 import { Button, Typography } from '@mui/material';
-
-import Adaz from 'src/plugins/muigrid/Adaz';
 import { DashboardContent } from 'src/layouts/dashboard';
-import FormBuilder from 'src/plugins/formBuilder/main/FormBuilder';
-import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
-
+import TableBuilder from 'src/plugins/formBuilder/main/TableBuilder';
+import FormBuilder, { FormBuilderRef } from 'src/plugins/formBuilder/main/FormBuilder';
+import Items from './newItems';
 import Personal from './personal';
+import KyroBuilder from 'src/plugins/formBuilder/main/KyroBuilder';
+import { jsonTest } from './test';
+import OItems from './OItems';
+import MyPage from './newItems';
 
 const Accounting = () => {
-  const formRef = useRef<FormBuilderRef>(null);
-  const [formDetails, setFormDetails] = useState(null); // State to hold form configuration
-  const [loading, setLoading] = useState(true); // State to manage loading
+  const ItemsForm = (inData: any) => {
+    const formRef = useRef<FormBuilderRef>(null); // Replace with appropriate FormBuilderRef type if available
+    const [formDetails, setFormDetails] = useState(inData.schema); // State to hold form configuration
 
-  const handleOnChange = (data: Record<string, any>) => {
-    console.log('Form data changed:', data);
-  };
+    const handleOnChange = (data: Record<string, any>) => {
+      console.log('Form data changed:', data);
+    };
 
-  const handleFocus = (fieldName: string, event: any) => {
-    // console.log('Accounting Focus:', {
-    //   fieldName,
-    //   value: event.target.value,
-    //   timestamp: new Date().toISOString(),
-    // });
-  };
+    const handleFocus = (fieldName: string, event: any) => {
+      // Add focus logic here if needed
+    };
 
-  const handleKeyDown = (fieldName: string, event: any) => {
-    // if (event.key === 'Tab') {
-    //   console.log(`Enter pressed on ${fieldName}`);
-    // }
-  };
+    const handleBlur = (fieldName: string, event: any) => {
+      const value = event.target.value;
 
-  const handleKeyUp = (fieldName: string, event: any) => {
-    // console.log('Accounting KeyUp:', {
-    //   fieldName,
-    //   key: event.key,
-    //   value: event.target.value,
-    //   timestamp: new Date().toISOString(),
-    // });
-  };
+      // Retrieve the current errors
+      const currentErrors = formRef.current?.getFormErrors() || {};
 
-  const handleBlur = (fieldName: string, event: any) => {
-    // console.log('Accounting Blur:', {
-    //   fieldName,
-    //   value: event.target.value,
-    //   timestamp: new Date().toISOString(),
-    // });
-  };
+      // Initialize a copy of current errors to update
+      const updatedErrors = { ...currentErrors };
 
-  const handleAddField = (newField: any) => {
-    formRef.current?.addField(newField);
-  };
+      // Example logic to handle errors based on fieldName
+      if (fieldName === 'quantity') {
+        const age = parseInt(value, 10);
+        if (isNaN(age) || age < 0) {
+          updatedErrors[fieldName] = 'Please enter a valid age Yo';
+        } else {
+          delete updatedErrors[fieldName]; // Remove error if valid
+        }
+      }
 
-  const handleRemoveField = (fieldName: string) => {
-    formRef.current?.removeField(fieldName);
-  };
-
-  const initialData = {
-    name: 'Sartha',
-    lastName: 'Doe',
-    schoolName: 'ABC School',
-    collegeName: 'XYZ College',
-  };
-
-  // Fetch form configuration from the API
-  useEffect(() => {
-    const loadFormConfig = async () => {
-      try {
-        const config = await fetchFormDetails({
-          formId: 'items',
-          endpoint: 'formio',
-          action: 'schema',
-        });
-        setFormDetails(config);
-      } catch (error) {
-        console.error('Failed to load form configuration:', error);
-      } finally {
-        setLoading(false);
+      // Update form errors in the formRef
+      if (formRef.current) {
+        formRef.current.setFormErrors(updatedErrors);
       }
     };
 
-    loadFormConfig();
-  }, []);
+    // Register event handlers once `formRef.current` is set
+    useEffect(() => {
+      if (formRef.current) {
+        formRef.current.onChange(handleOnChange);
+        formRef.current.onBlur(handleBlur);
+        formRef.current.onFocus(handleFocus);
+        console.log('All event handlers registered');
+      }
+    }, []);
 
-  // Register event handlers once `formRef.current` is set
-  useEffect(() => {
-    if (formRef.current) {
-      formRef.current.onChange(handleOnChange);
-      formRef.current.onKeyDown(handleKeyDown);
-      formRef.current.onKeyUp(handleKeyUp);
-      formRef.current.onBlur(handleBlur);
-      formRef.current.onFocus(handleFocus);
-      console.log('All event handlers registered');
-    }
-  }, [loading]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+    return (
+      <div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ width: '100%', marginBottom: '30px' }}>
+            {formDetails && (
+              <FormBuilder ref={formRef} config={formDetails} initialData={inData.inData} />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
       <DashboardContent>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Accounting Form
+          Test Page
         </Typography>
-        <div style={{ width: '60%', marginBottom: '30px' }}>
-          {formDetails && <FormBuilder ref={formRef} config={formDetails} />}
+        <div style={{ width: '100%', marginBottom: '30px' }}>
+          {/* <TableBuilder formId="items" typer="table_with_form" DetailsComponent={ItemsForm} /> */}
+          {/* <TableBuilder formId="items" typer="table_with_form" DetailsComponent={OItems} /> */}
+          {/* <TableBuilder formId="per_details" typer="table_with_form" DetailsComponent={Personal} /> */}
+          {/* <TableBuilder formId="per_details" typer="just_table" /> */}
+          {/* <KyroBuilder formId="items" typer="form" /> */}
+          {/* <Items /> */}
+          <MyPage />
         </div>
-        <Personal />
-        <div style={{ width: '50%', display: 'flex', flexDirection: 'row', gap: '10px' }}>
-          <Adaz />
-        </div>
-        <Button onClick={() => console.log(formRef.current?.getFormData())}>Get Values</Button>
       </DashboardContent>
     </div>
   );
