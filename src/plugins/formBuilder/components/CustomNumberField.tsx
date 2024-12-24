@@ -59,7 +59,7 @@ const CustomNumberField: React.FC<CustomNumberFieldProps> = ({
     // Ensure the pattern is a RegExp
     if (validation?.pattern) {
       const pattern = new RegExp(validation.pattern); // Convert the string to a RegExp object
-
+      console.log(inputValue, pattern);
       if (!pattern.test(inputValue)) {
         setError(validation.errorMessage || 'Invalid input');
       } else {

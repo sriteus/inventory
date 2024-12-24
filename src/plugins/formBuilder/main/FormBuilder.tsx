@@ -54,6 +54,7 @@ interface FormBuilderProps {
   onKeyUp?: (fieldName: string, event: React.KeyboardEvent) => void;
   onBlur?: (fieldName: string, event: React.FocusEvent) => void;
   onFocus?: (fieldName: string, event: React.FocusEvent) => void;
+  filterSave?: any;
 }
 
 export interface FormBuilderRef {
@@ -70,8 +71,7 @@ export interface FormBuilderRef {
 }
 
 const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
-  ({ config, initialData, customEvent, onKeyDown, onKeyUp, onBlur, onFocus }, ref) => {
-    // Default to an empty array if sections is undefined
+  ({ config, initialData, customEvent, onKeyDown, onKeyUp, onBlur, onFocus, filterSave }, ref) => {
     const formId = config.formid;
     const { sections = [] } = config;
 
@@ -171,6 +171,9 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
     };
 
     const handleBlur = async (name: string, event: React.FocusEvent) => {
+      if (filterSave) {
+        return;
+      }
       if (onBlurCallbackRef.current) {
         onBlurCallbackRef.current(name, event);
       }
@@ -330,7 +333,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           addAttributes: column.addattrs || {}, // Any additional attributes
           options: column.options, // Pass options from the column config
           type: column.type,
-          disabled: isDisabled,
+          // disabled: isDisabled,
         },
         value: formData[column.field],
         onChange: (value: any) => handleFieldChange(column.field, value),
@@ -378,7 +381,10 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         alert('Please correct the errors before submitting.');
         return;
       }
-
+      if (filterSave) {
+        filterSave(formData); // Pass formData to parent component
+        return;
+      }
       try {
         // Extract primary key values from formData
         const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
@@ -394,11 +400,12 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           }
           return acc;
         }, {});
+        console.log('I am loader', data, initData);
         const response = await fetchFormDetails({
           action: 'upsert',
           formId: formId,
           endpoint: 'formio',
-          initData,
+          initData: initData,
           data,
         });
 
@@ -406,7 +413,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         console.log('Save successful:', response);
         alert('Form saved successfully!');
         resetForm();
-        window.location.reload();
+        // window.location.reload();
       } catch (error) {
         // Handle error response
         console.error('Error during save:', error);
@@ -466,32 +473,30 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
             <Box
               key={section.sectionid}
               sx={{
-                padding: 1, // Reduced padding
+                padding: 1,
                 border: '1px solid #ccc',
                 borderRadius: '8px',
-                marginBottom: 1, // Reduced bottom margin
+                marginBottom: 1,
               }}
             >
               <Box
                 sx={{
                   textAlign: 'center',
                   fontWeight: 'bold',
-                  marginBottom: -3, // Minimal gap between title and content
+                  marginBottom: -3,
                   marginTop: -2,
                 }}
               >
                 <h2>{section.title}</h2>
               </Box>
               <Grid container spacing={1}>
-                {' '}
-                {/* Reduced grid spacing further */}
                 {section.columns.map((column: any) => (
                   <Grid
                     item
                     xs={12}
                     sm={column.colsize ? parseInt(column.colsize.replace('col-', '')) : 12}
                     key={column.field}
-                    sx={{ py: 0.5 }} // Reduced vertical padding in grid items
+                    sx={{ py: 0.5 }}
                   >
                     {renderField(column)}
                     {formErrors[column.field] && <ErrorTooltip error={formErrors[column.field]} />}
@@ -503,14 +508,33 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         ) : (
           <Box>No sections available.</Box>
         )}
-        <LoadingButton
+        {filterSave ? (
+          <LoadingButton
+            variant="contained"
+            onClick={handleSubmit}
+            sx={{ mt: 1 }} // Reduced top margin
+            disabled={!isFormValid} // Disabled unless pkeys are filled and all fields are valid
+          >
+            Submit
+          </LoadingButton>
+        ) : (
+          <LoadingButton
+            variant="contained"
+            onClick={handleSubmit}
+            sx={{ mt: 1 }} // Reduced top margin
+            disabled={!isFormValid} // Disabled unless pkeys are filled and all fields are valid
+          >
+            Save
+          </LoadingButton>
+        )}
+        {/* <LoadingButton
           variant="contained"
           onClick={handleSubmit}
           sx={{ mt: 1 }} // Reduced top margin
           disabled={!isFormValid} // Disabled unless pkeys are filled and all fields are valid
         >
           Save
-        </LoadingButton>
+        </LoadingButton> */}
 
         {formMode === 'edit' && (
           <>

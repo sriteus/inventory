@@ -4,6 +4,7 @@ import { fetchFormDetails } from '../api/fetchFormDetails';
 import TableBuilder2 from './TableBuilder2';
 import { Typography } from '@mui/material';
 import { trimDateStrings } from '../formatters/dateTrimmer';
+import FilterFormBuilder from './FilterBuilder';
 
 interface KyroBuilderProps {
   formId: string;
@@ -32,6 +33,7 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
       onKeyDown,
       onKeyUp,
       onFocus,
+      filterInitData,
     },
     ref
   ) => {
@@ -44,6 +46,8 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
     const [rowInitialData, setRowInitialData] = useState<any>(null);
     const [formFlag, setFormFlag] = useState<boolean>(false);
     const [isLoadingRowData, setIsLoadingRowData] = useState<boolean>(false);
+    const [isFilter, setIsFilter] = useState<boolean>(false);
+    const [filteredData, setFilteredData] = useState<any>(null);
 
     useImperativeHandle(ref, () => ({
       addField: (field) => {
@@ -82,6 +86,9 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             endpoint: 'formio',
             action: 'schema',
           });
+          if (formDetails.type === 'F') {
+            setIsFilter(true);
+          }
           setSchema(formDetails);
         } catch (error) {
           console.error('Error fetching form details:', error);
@@ -92,7 +99,6 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
 
       fetchData();
     }, [formId]);
-
     const handleMouseDown = () => setIsResizing(true);
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -116,16 +122,22 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }, [isResizing]);
-
+    const handleFormSubmit = (formData: Record<string, any>) => {
+      console.log('Submitted Data:', formData);
+      const combinedData = { ...formData, ...filteredData, ...filterInitData };
+      setFilteredData(combinedData);
+    };
     const handleRowSelect = async (row: any) => {
       // Reset form state before loading new data
       setFormFlag(false);
       setRowInitialData(null);
       setSelectedData(row);
       setIsLoadingRowData(true);
-
       try {
-        if (render_type === 'table_with_form' && schema?.pkeys) {
+        if (
+          (schema.formview === 'table-form' || schema.formview === 'filter-table-form') &&
+          schema?.pkeys
+        ) {
           const pkeys = schema.pkeys.split(',');
           const initData: Record<string, any> = {};
 
@@ -140,8 +152,10 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             initData,
           });
 
-          const filteredData = trimDateStrings(config);
-          setRowInitialData(filteredData);
+          const dateFiltered = trimDateStrings(config);
+          //   const combinedData = { ...filteredData, ...filterInitData };
+
+          setRowInitialData({ ...filteredData, ...filterInitData, ...dateFiltered });
           // Only show form after data is loaded
           setFormFlag(true);
         }
@@ -151,7 +165,7 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
         setIsLoadingRowData(false);
       }
     };
-
+    console.log(filterInitData);
     const handleRowDeselect = () => {
       setSelectedData(null);
       setRowInitialData(null);
@@ -165,10 +179,113 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
     return (
       <>
         <div>
-          <Typography variant="h6" sx={{ mb: 2, border: '1px solid red', textAlign: 'center' }}>
-            {render_type}
+          <Typography variant="h6" sx={{ mb: 2, border: '1px solid black', textAlign: 'center' }}>
+            {schema?.title}
           </Typography>
         </div>
+        {(schema.formview === 'filter-form' ||
+          schema.formview === 'filter-table-form' ||
+          schema.formview === 'filter-table') && (
+          <FilterFormBuilder
+            formId={schema.formfilter}
+            onSubmit={handleFormSubmit}
+            filterData={filterInitData}
+          />
+        )}
+        {filteredData ? (
+          <div style={{ display: 'flex', width: '100%', height: '100%' }}>
+            {schema.formview === 'filter-form' && (
+              <FormBuilder
+                ref={formBuilderRef}
+                config={schema}
+                initialData={filteredData}
+                onBlur={onBlur}
+                onKeyDown={onKeyDown}
+                onKeyUp={onKeyUp}
+                onFocus={onFocus}
+              />
+            )}{' '}
+            {schema.formview === 'filter-table' && (
+              <TableBuilder2
+                formId={formId}
+                onRowSelect={(row) => console.log('Selected Row:', row)}
+                filterData={filteredData}
+              />
+            )}
+            {schema.formview === 'filter-table-form' && (
+              <>
+                <div
+                  style={{ width: `${dividerPosition}%`, overflow: 'auto', paddingRight: '10px' }}
+                >
+                  <TableBuilder2
+                    formId={formId}
+                    onRowSelect={handleRowSelect}
+                    filterData={filteredData}
+                  />
+                </div>
+                <div
+                  style={{ width: '5px', cursor: 'col-resize', backgroundColor: '#ccc' }}
+                  onMouseDown={handleMouseDown}
+                ></div>
+                <div
+                  style={{
+                    width: `${100 - dividerPosition}%`,
+                    overflow: 'auto',
+                    paddingLeft: '10px',
+                  }}
+                >
+                  {isLoadingRowData ? (
+                    <div>Loading row data...</div>
+                  ) : (
+                    formFlag &&
+                    selectedData &&
+                    rowInitialData && (
+                      <>
+                        <div style={{ flex: 1 }}>
+                          <FormBuilder
+                            key={selectedData.id || JSON.stringify(selectedData)}
+                            ref={formBuilderRef}
+                            config={schema}
+                            initialData={rowInitialData}
+                            onBlur={onBlur}
+                            onKeyDown={onKeyDown}
+                            onKeyUp={onKeyUp}
+                            onFocus={onFocus}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            borderTop: '1px solid #e5e7eb',
+                            padding: '16px 0',
+                            marginTop: '16px',
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                          }}
+                        >
+                          <button
+                            onClick={handleRowDeselect}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#f3f4f6',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Close Form
+                          </button>
+                        </div>
+                      </>
+                    )
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div>Form Will Load if above is filled</div>
+        )}
+
         <div
           style={{
             display: 'flex',
@@ -178,7 +295,7 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             padding: '10px',
           }}
         >
-          {render_type === 'just_form' && (
+          {schema.formview === 'form' && (
             <FormBuilder
               ref={formBuilderRef}
               config={schema}
@@ -197,7 +314,7 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             />
           )}
 
-          {render_type === 'table_with_form' && (
+          {schema.formview === 'table-form' && (
             <>
               <div style={{ width: `${dividerPosition}%`, overflow: 'auto', paddingRight: '10px' }}>
                 <TableBuilder2 formId={formId} onRowSelect={handleRowSelect} />

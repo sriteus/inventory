@@ -7,11 +7,14 @@ import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
 interface TableBuilderProps {
   formId: string;
   onRowSelect: (selectedRow: any) => void; // Callback to pass selected row to parent
+  filterData?: any;
 }
 
-const TableBuilder2 = ({ formId, onRowSelect }: TableBuilderProps) => {
+const TableBuilder2 = ({ formId, onRowSelect, filterData }: TableBuilderProps) => {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
+  const [filteredRows, setFilteredRows] = useState([]);
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [schema, setSchema] = useState('');
 
@@ -40,6 +43,7 @@ const TableBuilder2 = ({ formId, onRowSelect }: TableBuilderProps) => {
           formId,
           endpoint: 'formio',
           action: 'list',
+          initData: filterData,
         });
         const transformedData = config.map((item: any) => {
           const transformedItem = { ...item };
@@ -54,6 +58,7 @@ const TableBuilder2 = ({ formId, onRowSelect }: TableBuilderProps) => {
           return transformedItem;
         });
         setRows(transformedData);
+        setFilteredRows(transformedData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -64,14 +69,41 @@ const TableBuilder2 = ({ formId, onRowSelect }: TableBuilderProps) => {
     fetchData();
   }, [formId]);
 
+  const handleFilterChange = (key: string, value: string) => {
+    const updatedFilters = { ...filters, [key]: value };
+    setFilters(updatedFilters);
+
+    const filtered = rows.filter((row) =>
+      Object.keys(updatedFilters).every((filterKey) =>
+        String(row[filterKey] || '')
+          .toLowerCase()
+          .includes(updatedFilters[filterKey].toLowerCase())
+      )
+    );
+    setFilteredRows(filtered);
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+    <div>
+      {/* Filter Bar */}
+      {/* <div style={{ display: 'flex', gap: '1rem', marginBottom: '10px' }}>
+        {columns.map((col: any) => (
+          <input
+            key={col.key}
+            placeholder={`Filter by ${col.name}`}
+            onChange={(e) => handleFilterChange(col.key, e.target.value)}
+            style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+          />
+        ))}
+      </div> */}
+
+      {/* Data Grid */}
       <div style={{ flex: 1, width: '100%', height: '100%', overflow: 'auto' }}>
         <DataGrid
           columns={columns}
-          rows={rows}
+          rows={filteredRows}
           onRowsChange={setRows}
           rowKeyGetter={(row: any) => String(Object.values(row)[0])}
           className="rdg-light"
