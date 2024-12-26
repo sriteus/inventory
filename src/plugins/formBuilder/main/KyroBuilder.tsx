@@ -25,7 +25,6 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
   (
     {
       formId,
-      render_type,
       initialData,
       selectedRow,
       onBlur,
@@ -153,10 +152,7 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
           });
 
           const dateFiltered = trimDateStrings(config);
-          //   const combinedData = { ...filteredData, ...filterInitData };
-
           setRowInitialData({ ...filteredData, ...filterInitData, ...dateFiltered });
-          // Only show form after data is loaded
           setFormFlag(true);
         }
       } catch (error) {
@@ -307,7 +303,7 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             />
           )}
 
-          {render_type === 'just_table' && (
+          {schema.formview === 'table' && (
             <TableBuilder2
               formId={formId}
               onRowSelect={(row) => console.log('Selected Row:', row)}

@@ -12,18 +12,18 @@ const MyPage = () => {
   };
 
   const handleBlur = (fieldName: string, event: any) => {
-    // const value = event.target.value;
-    // const currentErrors = kyroBuilderRef.current?.getFormErrors() || {};
-    // const updatedErrors = { ...currentErrors };
-    // if (fieldName === 'person_age') {
-    //   const age = parseInt(value, 10);
-    //   if (isNaN(age) || age < 0) {
-    //     updatedErrors[fieldName] = 'Please enter a valid age Yo';
-    //   } else {
-    //     delete updatedErrors[fieldName]; // Remove error if valid
-    //   }
-    // }
-    // kyroBuilderRef.current?.setFormErrors(updatedErrors);
+    const value = event.target.value;
+    const currentErrors = kyroBuilderRef.current?.getFormErrors() || {};
+    const updatedErrors = { ...currentErrors };
+    if (fieldName === 'model') {
+      const model = value;
+      if (model === '1') {
+        updatedErrors[fieldName] = 'You cant set the model to 1';
+      } else {
+        delete updatedErrors[fieldName]; // Remove error if valid
+      }
+    }
+    kyroBuilderRef.current?.setFormErrors(updatedErrors);
   };
   const handleFocus = (fieldName: string, event: any) => {
     console.log(`Field "${fieldName}" focused with value: ${event.target.value}`);
@@ -32,19 +32,12 @@ const MyPage = () => {
   return (
     <div>
       {/* <div style={{ maxWidth: '600px' }}> */}
-      <KyroBuilder
-        ref={kyroBuilderRef}
-        formId="items"
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        render_type="table_with_form"
-      />{' '}
+      <KyroBuilder ref={kyroBuilderRef} formId="items" />{' '}
       <KyroBuilder
         ref={kyroBuilderRef}
         formId="products_data"
         onBlur={handleBlur}
         onFocus={handleFocus}
-        render_type="just_formnhgjyhm"
         filterInitData={{ company: 'apple' }}
       />
       {/* </div> */}

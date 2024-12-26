@@ -1,310 +1,241 @@
-# Form Builder Plugin
+# Dynamic Form System Documentation
 
-The **Form Builder Plugin** is a React-based dynamic form creation utility. It allows you to generate, customize, and handle form submissions seamlessly using configurations. This documentation explains how to use the plugin, from setting up to implementing custom features.
+## Overview
 
----
+A comprehensive React-based form system that provides dynamic form building, filtering, and table view capabilities. The system consists of four main components working together to create a flexible and powerful form management solution.
 
-## Table of Contents
+## Key Components
 
-1. [Installation](#installation)
-2. [Usage](#usage)
-   - [Basic Example](#basic-example)
-   - [Form Configuration Structure](#form-configuration-structure)
-3. [Components](#components)
-4. [API Reference](#api-reference)
-   - [Props](#props)
-   - [Ref Methods](#ref-methods)
-5. [Customizing Form Fields](#customizing-form-fields)
-6. [Event Handling](#event-handling)
-7. [Validation and Error Handling](#validation-and-error-handling)
-8. [Sample Project Structure](#sample-project-structure)
-9. [Fetching Form Configuration](#fetching-form-configuration)
+### 1. KyroBuilder (Main Component)
 
----
+The core component that orchestrates the form system.
 
-## Installation
+```typescript
+interface KyroBuilderProps {
+  formId: string; // Unique form identifier
+  variant?: string; // Form variant type
+  initialData?: Record<string, any>; // Initial form data
+  onBlur?: Function; // Blur event handler
+  onChange?: Function; // Change event handler
+  onKeyDown?: Function; // Key down event handler
+  onKeyUp?: Function; // Key up event handler
+  onFocus?: Function; // Focus event handler
+  filterInitData?: any; // Initial filter data
+}
+```
 
-1. Clone the repository or add the code to your project.
-2. Install the required dependencies:
+Features:
 
-   ```bash
-   npm install @mui/material @mui/lab react react-dom
-   ```
+- Dynamic schema loading
+- Form and table view integration
+- Resizable split view
+- Row selection handling
+- Form state management
 
-3. Ensure you have the supporting components like `CustomSelect`, `CustomTextField`, etc., or replace them with your preferred alternatives.
+### 2. FormBuilder (Form Component)
 
----
+Handles the rendering and management of form fields.
 
-## Usage
+```typescript
+interface FormBuilderProps {
+  config: any; // Form configuration
+  initialData?: Record<string, any>; // Initial form data
+  customEvent?: Function; // Custom event handler
+  onKeyDown?: Function; // Key down event handler
+  onKeyUp?: Function; // Key up event handler
+  onBlur?: Function; // Blur event handler
+  onFocus?: Function; // Focus event handler
+  filterSave?: Function; // Filter save handler
+}
+```
 
-### Basic Example
+Features:
 
-Here is a minimal example of how to use the **Form Builder**:
+- Dynamic field rendering
+- Validation system
+- Error handling
+- Form data management
+- Multiple section support
 
-```tsx
-import React, { useRef } from 'react';
-import FormBuilder, { FormBuilderRef } from './path/to/FormBuilder';
+### 3. FilterFormBuilder
 
-const formConfig = {
-  formid: 'userForm',
-  title: 'User Information',
-  pkeys: 'id',
-  sections: [
-    {
-      sectionid: 'personalInfo',
-      title: 'Personal Information',
-      columns: [
-        {
-          formid: 'userForm',
-          sectionid: 'personalInfo',
-          field: 'name',
-          title: 'Full Name',
-          colsize: 'col-6',
-          type: 'text',
-          component: 'textfield',
-          required: 1,
-          placeholder: 'Enter your full name',
-        },
-        {
-          formid: 'userForm',
-          sectionid: 'personalInfo',
-          field: 'email',
-          title: 'Email Address',
-          colsize: 'col-6',
-          type: 'email',
-          component: 'textfield',
-          required: 1,
-          placeholder: 'Enter your email address',
-        },
-      ],
-    },
-  ],
-};
+Manages filter forms and their interactions.
 
-const MyFormPage = () => {
-  const formRef = useRef<FormBuilderRef>(null);
+```typescript
+interface FilterFormBuilderProps {
+  formId: string; // Form identifier
+  onSubmit: (formData: Record<string, any>) => void; // Submit handler
+  filterData?: any; // Initial filter data
+}
+```
 
-  const handleFormSubmit = () => {
-    if (formRef.current) {
-      const formData = formRef.current.getFormData();
-      console.log('Form Data:', formData);
+Features:
+
+- Filter-specific form handling
+- Integration with main form builder
+- Loading state management
+- Schema-based filter generation
+
+### 4. TableBuilder2
+
+Handles data grid display and interactions.
+
+```typescript
+interface TableBuilderProps {
+  formId: string; // Form identifier
+  onRowSelect: (row: any) => void; // Row selection handler
+  filterData?: any; // Filter data
+}
+```
+
+Features:
+
+- Dynamic column generation
+- Data filtering
+- Row selection
+- Responsive grid layout
+
+## Usage Example
+
+```typescript
+import { useRef } from 'react';
+import { KyroBuilderRef } from './KyroBuilder';
+import KyroBuilder from './KyroBuilder';
+
+const MyPage = () => {
+  const kyroBuilderRef = useRef<KyroBuilderRef>(null);
+
+  const handleBlur = (fieldName: string, event: any) => {
+    const value = event.target.value;
+    const currentErrors = kyroBuilderRef.current?.getFormErrors() || {};
+    const updatedErrors = { ...currentErrors };
+
+    if (fieldName === 'model') {
+      if (value === '1') {
+        updatedErrors[fieldName] = 'You cant set the model to 1';
+      } else {
+        delete updatedErrors[fieldName];
+      }
     }
+    kyroBuilderRef.current?.setFormErrors(updatedErrors);
+  };
+
+  const handleFocus = (fieldName: string, event: any) => {
+    console.log(`Field "${fieldName}" focused with value: ${event.target.value}`);
   };
 
   return (
     <div>
-      <h1>User Form</h1>
-      <FormBuilder ref={formRef} config={formConfig} />
-      <button onClick={handleFormSubmit}>Submit</button>
+      <KyroBuilder
+        ref={kyroBuilderRef}
+        formId="products_data"
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        filterInitData={{ company: 'apple' }}
+      />
     </div>
   );
 };
-
-export default MyFormPage;
 ```
-
-### Form Configuration Structure
-
-#### Example Configuration Object
-
-```js
-const formConfig = {
-  formid: 'exampleForm',
-  title: 'Example Form',
-  pkeys: 'id', // Primary key(s), comma-separated
-  sections: [
-    {
-      sectionid: 'section1',
-      title: 'Section 1',
-      columns: [
-        {
-          field: 'username',
-          title: 'Username',
-          type: 'text',
-          component: 'textfield',
-          required: 1,
-          placeholder: 'Enter your username',
-        },
-        {
-          field: 'password',
-          title: 'Password',
-          type: 'password',
-          component: 'checkpassword',
-          required: 1,
-          placeholder: 'Enter your password',
-        },
-      ],
-    },
-  ],
-};
-```
-
-### Notes
-
-- Each `section` contains a `columns` array defining individual fields.
-- Components are mapped via the `component` property (e.g., `textfield`, `reactselect`).
-- Use the `pkeys` property to set primary key fields for edit modes.
-
----
-
-## Components
-
-The plugin uses custom components for field rendering. Replace these with your implementations if necessary:
-
-1. **`CustomTextField`**: For input fields.
-2. **`CustomSelect`**: For dropdowns.
-3. **`CustomDatePicker`**: For date inputs.
-4. **`CustomFileUpload`**: For file uploads.
-5. **`CustomPassword`**: For password fields.
-6. **`CustomTextArea`**: For multi-line text input.
-
----
 
 ## API Reference
 
-### Props
+### KyroBuilder Methods
 
-| Prop Name     | Type                         | Description                           |
-| ------------- | ---------------------------- | ------------------------------------- |
-| `config`      | `object`                     | The form configuration object.        |
-| `initialData` | `Record<string, any>`        | Pre-filled form data (for edit mode). |
-| `customEvent` | `(fieldName, value) => void` | Callback for custom field events.     |
-| `onKeyDown`   | `(fieldName, event) => void` | Callback for keydown events.          |
-| `onKeyUp`     | `(fieldName, event) => void` | Callback for keyup events.            |
-| `onBlur`      | `(fieldName, event) => void` | Callback for blur events.             |
-| `onFocus`     | `(fieldName, event) => void` | Callback for focus events.            |
-
-### Ref Methods
-
-| Method        | Description                            |
-| ------------- | -------------------------------------- |
-| `addField`    | Adds a new field dynamically.          |
-| `removeField` | Removes an existing field by name.     |
-| `getFormData` | Retrieves the current form data.       |
-| `onChange`    | Sets a callback for form data changes. |
-| `onKeyDown`   | Sets a callback for keydown events.    |
-| `onKeyUp`     | Sets a callback for keyup events.      |
-| `onBlur`      | Sets a callback for blur events.       |
-| `onFocus`     | Sets a callback for focus events.      |
-
----
-
-## Customizing Form Fields
-
-You can customize field rendering by updating the `renderField` function within the plugin:
-
-```tsx
-const renderField = (column: ColumnConfig) => {
-  switch (column.component) {
-    case 'textfield':
-      return <CustomTextField {...commonProps} />;
-    // Add additional cases for new components
-  }
-};
+```typescript
+interface KyroBuilderRef {
+  addField: (field: any) => void;
+  removeField: (fieldName: string) => void;
+  getFormData: () => Record<string, any>;
+  setFormErrors: (errors: Record<string, string | null>) => void;
+  getFormErrors: () => Record<string, string | null>;
+}
 ```
 
----
+### Form Configuration Schema
+
+```typescript
+interface ColumnConfig {
+  formid: string;
+  sectionid: string;
+  field: string;
+  title: string;
+  colsize: string;
+  type: string;
+  component: string;
+  required: number;
+  sortno: number;
+  active: number;
+  hint?: string;
+  placeholder?: string;
+  options?: any[];
+  defaultvalue?: any;
+  addattrs?: any;
+}
+```
+
+## Form Views
+
+The system supports multiple view types:
+
+1. Combined Form and Table View
+
+   - Split screen with resizable panels
+   - Interactive row selection
+   - Form editing capabilities
+
+2. Filter Form View
+
+   - Dedicated filtering interface
+   - Real-time filter applications
+   - Submit handler for filter changes
+
+3. Table View
+   - Data grid display
+   - Column customization
+   - Row selection handling
+
+## State Management
+
+The system manages several states:
+
+- Form data state
+- Error state
+- Loading states
+- Filter states
+- Row selection state
 
 ## Event Handling
 
-The Form Builder supports multiple event handlers:
+Comprehensive event system including:
 
-- **Custom Events**: Use the `customEvent` prop for field-specific interactions.
-- **Keyboard Events**: `onKeyDown` and `onKeyUp` allow monitoring of key inputs.
-- **Focus Events**: Use `onFocus` and `onBlur` for focus-related interactions.
+- Blur events
+- Focus events
+- Change events
+- Key events
+- Custom events
 
----
+## Dependencies
 
-## Validation and Error Handling
+- React 18+
+- react-data-grid
+- @mui/material
+- TypeScript 4.5+
 
-Validation rules can be added using the `required` property or through custom logic in the `validateField` function:
+## Best Practices
 
-```tsx
-const validateField = (column: ColumnConfig, value: any): string | null => {
-  if (column.required && !value) {
-    return `${column.title} is required`;
-  }
-  return null;
-};
-```
+1. Always provide unique formIds
+2. Handle loading states appropriately
+3. Implement proper error handling
+4. Use TypeScript for better type safety
+5. Manage form refs correctly
+6. Handle validation appropriately
 
-Errors are displayed below each field:
+## Error Handling
 
-```tsx
-{
-  formErrors[column.field] && (
-    <Box sx={{ color: 'red', fontSize: '0.75rem', mt: 0.25 }}>{formErrors[column.field]}</Box>
-  );
-}
-```
+The system includes built-in error handling for:
 
----
-
-## Sample Project Structure
-
-```plaintext
-src/
-|-- components/
-|   |-- CustomSelect.tsx
-|   |-- CustomTextField.tsx
-|   |-- ...
-|
-|-- plugins/
-|   |-- formBuilder/
-|       |-- main/FormBuilder.tsx
-|       |-- api/fetchFormDetails.ts
-|
-|-- pages/
-|   |-- MyFormPage.tsx
-```
-
----
-
-## Fetching Form Configuration
-
-Add the following utility to fetch form configuration details dynamically:
-
-```typescript
-// src/utils/fetchFormConfig.ts
-import axios from 'axios';
-
-const token = import.meta.env.VITE_AUTH_TOKEN;
-
-export interface FetchFormConfigParams {
-  formId: string;
-  endpoint: string;
-  action: string;
-  data?: Record<string, any>;
-  initData?: Record<string, any>;
-}
-
-export const fetchFormDetails = async ({
-  formId,
-  endpoint,
-  action,
-  data = {},
-  initData = {},
-}: FetchFormConfigParams) => {
-  try {
-    const response = await axios.post(
-      `http://localhost:8003/api/${endpoint}`,
-      {
-        action,
-        formId,
-        data,
-        initData,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data.data[0];
-  } catch (error) {
-    console.error(`Error fetching form configuration for formId ${formId}:`, error);
-    throw error;
-  }
-};
-```
+- Schema loading errors
+- Validation errors
+- API errors
+- Data loading errors
