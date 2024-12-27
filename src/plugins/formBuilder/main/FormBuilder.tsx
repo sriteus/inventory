@@ -102,7 +102,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           ...initialData,
         }));
         setPkeysFilled(true);
-        setFormMode('edit');
+        // setFormMode('edit');
       }
     }, [initialData]);
 
@@ -185,6 +185,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
 
         const allPkeysFilled = pkeys.every((pkey: string | number) => {
           const value = formData[pkey];
+          console.log(pkey, value);
           if (value === null || value === undefined) return false;
           if (typeof value === 'string') return value.trim() !== '';
           if (typeof value === 'number') return !isNaN(value);
@@ -193,6 +194,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           return true; // Fallback for other types
         });
         setPkeysFilled(allPkeysFilled);
+        console.log('firstTime,', allPkeysFilled);
         if (allPkeysFilled) {
           try {
             // Build the initData object using the primary keys and their values from formData
@@ -333,7 +335,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           addAttributes: column.addattrs || {}, // Any additional attributes
           options: column.options, // Pass options from the column config
           type: column.type,
-          // disabled: isDisabled,
+          disabled: isDisabled,
         },
         value: formData[column.field],
         onChange: (value: any) => handleFieldChange(column.field, value),
@@ -363,19 +365,29 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
       }
     };
     const resetForm = () => {
-      setFormData(() =>
-        (sections || []).reduce(
-          (acc: any, section: any) => {
-            section.columns.forEach((column: any) => {
-              acc[column.field] = initialData?.[column.field] || column.defaultvalue || '';
-            });
-            return acc;
-          },
-          {} as Record<string, any>
-        )
-      );
+      setFormData((prevData) => {
+        const updatedData = { ...prevData };
+
+        // Get the list of primary keys (pkeys) from the config
+        const pkeys = (config.pkeys || '').split(',').filter((key: string) => key.trim());
+
+        // For each section and column, reset only non-pkey fields
+        sections.forEach((section: any) => {
+          section.columns.forEach((column: any) => {
+            // Check if the field is a pkey
+            if (!pkeys.includes(column.field)) {
+              // Reset the value for non-pkey fields
+              updatedData[column.field] = initialData?.[column.field] || column.defaultvalue || '';
+            }
+          });
+        });
+
+        return updatedData;
+      });
+
       setFormMode('create');
     };
+
     const handleSubmit = async () => {
       if (!validateAllFields()) {
         alert('Please correct the errors before submitting.');
@@ -400,7 +412,6 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
           }
           return acc;
         }, {});
-        console.log('I am loader', data, initData);
         const response = await fetchFormDetails({
           action: 'upsert',
           formId: formId,
@@ -412,6 +423,7 @@ const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(
         // Handle success response
         console.log('Save successful:', response);
         alert('Form saved successfully!');
+        setFormMode('create');
         resetForm();
         // window.location.reload();
       } catch (error) {

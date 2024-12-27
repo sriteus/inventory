@@ -7,10 +7,10 @@ import TableBuilder2 from './TableBuilder2';
 interface FilterFormBuilderProps {
   formId: string;
   onSubmit: (formData: Record<string, any>) => void;
-  filterData?: any;
+  initData?: any;
 }
 
-const FilterFormBuilder: React.FC<FilterFormBuilderProps> = ({ formId, onSubmit, filterData }) => {
+const FilterFormBuilder: React.FC<FilterFormBuilderProps> = ({ formId, onSubmit, initData }) => {
   const formBuilderRef = useRef<FormBuilderRef>(null);
   const [schema, setSchema] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -18,13 +18,13 @@ const FilterFormBuilder: React.FC<FilterFormBuilderProps> = ({ formId, onSubmit,
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log(filterData);
+      console.log(initData);
       try {
         const formDetails = await fetchFormDetails({
           formId: formId,
           endpoint: 'formio',
           action: 'schema',
-          initData: filterData,
+          initData: initData,
         });
         if (formDetails.type === 'F') {
           setIsFilter(true);

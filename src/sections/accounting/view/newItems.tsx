@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { KyroBuilderRef } from '../../../plugins/formBuilder/main/KyroBuilder';
 import KyroBuilder from '../../../plugins/formBuilder/main/KyroBuilder';
-import FilterFormBuilder from 'src/plugins/formBuilder/main/FilterBuilder';
 
 const MyPage = () => {
   const kyroBuilderRef = useRef<KyroBuilderRef>(null);
@@ -32,13 +31,14 @@ const MyPage = () => {
   return (
     <div>
       {/* <div style={{ maxWidth: '600px' }}> */}
-      <KyroBuilder ref={kyroBuilderRef} formId="items" />{' '}
+      {/* <KyroBuilder ref={kyroBuilderRef} formId="items" />{' '} */}
       <KyroBuilder
         ref={kyroBuilderRef}
         formId="products_data"
         onBlur={handleBlur}
         onFocus={handleFocus}
-        filterInitData={{ company: 'apple' }}
+        initData={{ company: 'apple', product_category: 'mobile' }}
+        // filterInitData={{ company: 'apple' }}
       />
       {/* </div> */}
       {/* <KyroBuilder

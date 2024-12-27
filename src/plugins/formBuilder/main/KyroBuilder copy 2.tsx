@@ -23,18 +23,7 @@ export interface KyroBuilderRef {
 
 const KyroBuilder = forwardRef<KyroBuilderRef, any>(
   (
-    {
-      formId,
-      render_type,
-      initialData,
-      selectedRow,
-      onBlur,
-      onChange,
-      onKeyDown,
-      onKeyUp,
-      onFocus,
-      filterData,
-    },
+    { formId, initialData, selectedRow, onBlur, onChange, onKeyDown, onKeyUp, onFocus, initData },
     ref
   ) => {
     const formBuilderRef = useRef<FormBuilderRef>(null);
@@ -43,11 +32,13 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
     const [selectedData, setSelectedData] = useState<any>(null);
     const [dividerPosition, setDividerPosition] = useState<number>(50);
     const [isResizing, setIsResizing] = useState<boolean>(false);
-    const [rowInitialData, setRowInitialData] = useState<any>(null);
+    const [rowInitialData, setRowInitialData] = useState<any>(initData);
     const [formFlag, setFormFlag] = useState<boolean>(false);
     const [isLoadingRowData, setIsLoadingRowData] = useState<boolean>(false);
     const [isFilter, setIsFilter] = useState<boolean>(false);
-    const [filteredData, setFilteredData] = useState<any>(null);
+    const [filteredData, setFilteredData] = useState<any>(initData);
+    const [showAfterFilter, setShowAfterFilter] = useState<boolean>(false);
+    const [componentKey, setComponentKey] = useState<number>(0);
 
     useImperativeHandle(ref, () => ({
       addField: (field) => {
@@ -122,16 +113,24 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }, [isResizing]);
-
+    const handleFormSubmit = (formData: Record<string, any>) => {
+      console.log('Submitted Data:', formData);
+      const combinedData = { ...filteredData, ...initData, ...formData };
+      setFilteredData(combinedData);
+      setComponentKey((prevKey) => prevKey + 1);
+      setShowAfterFilter(true);
+    };
     const handleRowSelect = async (row: any) => {
       // Reset form state before loading new data
       setFormFlag(false);
       setRowInitialData(null);
       setSelectedData(row);
       setIsLoadingRowData(true);
-
       try {
-        if (render_type === 'table_with_form' && schema?.pkeys) {
+        if (
+          (schema.formview === 'table-form' || schema.formview === 'filter-table-form') &&
+          schema?.pkeys
+        ) {
           const pkeys = schema.pkeys.split(',');
           const initData: Record<string, any> = {};
 
@@ -146,9 +145,8 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             initData,
           });
 
-          const filteredData = trimDateStrings(config);
-          setRowInitialData(filteredData);
-          // Only show form after data is loaded
+          const dateFiltered = trimDateStrings(config);
+          setRowInitialData({ ...filteredData, ...initData, ...dateFiltered });
           setFormFlag(true);
         }
       } catch (error) {
@@ -157,7 +155,6 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
         setIsLoadingRowData(false);
       }
     };
-
     const handleRowDeselect = () => {
       setSelectedData(null);
       setRowInitialData(null);
@@ -167,13 +164,6 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
     if (loading) {
       return <div>Loading...</div>;
     }
-
-    const handleFormSubmit = (formData: Record<string, any>) => {
-      console.log('Submitted Data:', formData);
-      const combinedData = { ...formData, ...filteredData, ...filterData };
-      setFilteredData(combinedData);
-    };
-    console.log(filteredData);
 
     return (
       <>
@@ -188,11 +178,11 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
           <FilterFormBuilder
             formId={schema.formfilter}
             onSubmit={handleFormSubmit}
-            filterData={filterData}
+            initData={initData}
           />
         )}
-        {filteredData ? (
-          <div>
+        {filteredData && showAfterFilter ? (
+          <div key={componentKey} style={{ display: 'flex', width: '100%', height: '100%' }}>
             {schema.formview === 'filter-form' && (
               <FormBuilder
                 ref={formBuilderRef}
@@ -208,30 +198,81 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
               <TableBuilder2
                 formId={formId}
                 onRowSelect={(row) => console.log('Selected Row:', row)}
-                filterData={filteredData}
+                initData={filteredData}
               />
             )}
             {schema.formview === 'filter-table-form' && (
               <>
-                <FormBuilder
-                  ref={formBuilderRef}
-                  config={schema}
-                  initialData={filteredData}
-                  onBlur={onBlur}
-                  onKeyDown={onKeyDown}
-                  onKeyUp={onKeyUp}
-                  onFocus={onFocus}
-                />
-                <TableBuilder2
-                  formId={formId}
-                  onRowSelect={(row) => console.log('Selected Row:', row)}
-                  filterData={filteredData}
-                />
+                <div
+                  style={{ width: `${dividerPosition}%`, overflow: 'auto', paddingRight: '10px' }}
+                >
+                  <TableBuilder2
+                    formId={formId}
+                    onRowSelect={handleRowSelect}
+                    initData={filteredData}
+                  />
+                </div>
+                <div
+                  style={{ width: '5px', cursor: 'col-resize', backgroundColor: '#ccc' }}
+                  onMouseDown={handleMouseDown}
+                ></div>
+                <div
+                  style={{
+                    width: `${100 - dividerPosition}%`,
+                    overflow: 'auto',
+                    paddingLeft: '10px',
+                  }}
+                >
+                  {isLoadingRowData ? (
+                    <div>Loading row data...</div>
+                  ) : (
+                    formFlag &&
+                    selectedData &&
+                    rowInitialData && (
+                      <>
+                        <div style={{ flex: 1 }}>
+                          <FormBuilder
+                            key={selectedData.id || JSON.stringify(selectedData)}
+                            ref={formBuilderRef}
+                            config={schema}
+                            initialData={rowInitialData}
+                            onBlur={onBlur}
+                            onKeyDown={onKeyDown}
+                            onKeyUp={onKeyUp}
+                            onFocus={onFocus}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            borderTop: '1px solid #e5e7eb',
+                            padding: '16px 0',
+                            marginTop: '16px',
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                          }}
+                        >
+                          <button
+                            onClick={handleRowDeselect}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#f3f4f6',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Close Form
+                          </button>
+                        </div>
+                      </>
+                    )
+                  )}
+                </div>
               </>
             )}
           </div>
         ) : (
-          <div>No</div>
+          <div>Form Will Load if above is filled</div>
         )}
 
         <div
@@ -243,11 +284,11 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             padding: '10px',
           }}
         >
-          {render_type === 'just_form' && (
+          {schema.formview === 'form' && (
             <FormBuilder
               ref={formBuilderRef}
               config={schema}
-              initialData={initialData}
+              initialData={filteredData}
               onBlur={onBlur}
               onKeyDown={onKeyDown}
               onKeyUp={onKeyUp}
@@ -255,17 +296,22 @@ const KyroBuilder = forwardRef<KyroBuilderRef, any>(
             />
           )}
 
-          {render_type === 'just_table' && (
+          {schema.formview === 'table' && (
             <TableBuilder2
               formId={formId}
               onRowSelect={(row) => console.log('Selected Row:', row)}
+              initData={rowInitialData}
             />
           )}
 
-          {render_type === 'table_with_form' && (
+          {schema.formview === 'table-form' && (
             <>
               <div style={{ width: `${dividerPosition}%`, overflow: 'auto', paddingRight: '10px' }}>
-                <TableBuilder2 formId={formId} onRowSelect={handleRowSelect} />
+                <TableBuilder2
+                  formId={formId}
+                  onRowSelect={handleRowSelect}
+                  initData={rowInitialData}
+                />
               </div>
               <div
                 style={{ width: '5px', cursor: 'col-resize', backgroundColor: '#ccc' }}

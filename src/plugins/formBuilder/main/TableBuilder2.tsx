@@ -7,10 +7,10 @@ import { fetchFormDetails } from 'src/plugins/formBuilder/api/fetchFormDetails';
 interface TableBuilderProps {
   formId: string;
   onRowSelect: (selectedRow: any) => void; // Callback to pass selected row to parent
-  filterData?: any;
+  initData?: any;
 }
 
-const TableBuilder2 = ({ formId, onRowSelect, filterData }: TableBuilderProps) => {
+const TableBuilder2 = ({ formId, onRowSelect, initData }: TableBuilderProps) => {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
@@ -43,7 +43,7 @@ const TableBuilder2 = ({ formId, onRowSelect, filterData }: TableBuilderProps) =
           formId,
           endpoint: 'formio',
           action: 'list',
-          initData: filterData,
+          initData: initData,
         });
         const transformedData = config.map((item: any) => {
           const transformedItem = { ...item };
